@@ -1,0 +1,1119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rnd-laboratory:experiment-plan:1.0",
+  "title": "R&D Laboratory — immutable experiment plan body",
+  "description": "Предлагаемый контракт от 07.10.2026. После canonical serialization сервер хранит SHA-256 рядом с телом PlanVersion. Approval является отдельной серверной сущностью и не может быть выдан содержимым этого JSON. Прохождение схемы не разрешает запуск.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan_id",
+    "version",
+    "workspace_id",
+    "research_id",
+    "mode",
+    "phase",
+    "study_type",
+    "title",
+    "question",
+    "hypotheses",
+    "candidates",
+    "protocol",
+    "dataset",
+    "metrics",
+    "frozen_artifacts",
+    "identities",
+    "execution",
+    "budget",
+    "approval_policy",
+    "analysis",
+    "retention",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "plan_id": {
+      "$ref": "#/$defs/id"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "workspace_id": {
+      "$ref": "#/$defs/id"
+    },
+    "research_id": {
+      "$ref": "#/$defs/id"
+    },
+    "mode": {
+      "enum": [
+        "demo",
+        "live"
+      ],
+      "description": "demo запрещает любые внешние оплачиваемые вызовы; переход к live создаёт новую версию и требует согласования."
+    },
+    "phase": {
+      "enum": [
+        "exploratory",
+        "pilot",
+        "confirmatory"
+      ]
+    },
+    "study_type": {
+      "enum": [
+        "comparison",
+        "reproduction",
+        "smoke"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "question": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 4000
+    },
+    "claim_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/id"
+      },
+      "uniqueItems": true
+    },
+    "hypotheses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/hypothesis"
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": {
+        "$ref": "#/$defs/candidate"
+      }
+    },
+    "protocol": {
+      "$ref": "#/$defs/protocol"
+    },
+    "dataset": {
+      "$ref": "#/$defs/dataset"
+    },
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/metric"
+      },
+      "contains": {
+        "type": "object",
+        "required": [
+          "primary"
+        ],
+        "properties": {
+          "primary": {
+            "const": true
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    "frozen_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/frozenArtifact"
+      }
+    },
+    "identities": {
+      "$ref": "#/$defs/identities"
+    },
+    "execution": {
+      "$ref": "#/$defs/execution"
+    },
+    "budget": {
+      "$ref": "#/$defs/budget"
+    },
+    "approval_policy": {
+      "$ref": "#/$defs/approvalPolicy"
+    },
+    "analysis": {
+      "$ref": "#/$defs/analysis"
+    },
+    "retention": {
+      "$ref": "#/$defs/retention"
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2000
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "study_type": {
+            "const": "comparison"
+          }
+        },
+        "required": [
+          "study_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "candidates": {
+            "minItems": 2,
+            "contains": {
+              "type": "object",
+              "required": [
+                "role"
+              ],
+              "properties": {
+                "role": {
+                  "const": "baseline"
+                }
+              }
+            },
+            "minContains": 1,
+            "maxContains": 1
+          },
+          "analysis": {
+            "properties": {
+              "paired": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "x-semantic-validation": [
+    "IDs кандидатов, гипотез и метрик уникальны в своей области; пары frozen-artifact (role, candidate_id) уникальны, кроме явно множественных артефактов роли. Все ссылки разрешаются в данном workspace.",
+    "Ровно одна primary metric. Для comparison не менее двух кандидатов и ровно один baseline; для reproduction/smoke достаточно одного кандидата без baseline.",
+    "hypotheses.metric_id ссылается на метрику; protocol.scorer_id и scorer version присутствуют в frozen_artifacts.",
+    "execution.max_attempts >= dataset.case_count * protocol.repetitions * candidates.length; дополнительные попытки явно предусмотрены политикой, не создаются скрытыми retries.",
+    "execution.max_provider_calls покрывает заявленные subject/judge calls и retry ceiling; не допускается превышение через SDK child calls, tools или native billed paths.",
+    "Все cost estimate minimum <= expected <= maximum <= budget.limit_usd; суммарные role cost lines согласованы с общей оценкой и тарифным snapshot.",
+    "Confirmed execution требует frozen code, dataset, protocol, prompt, runner, scorer, environment image и dependency lock; проверяются фактические hashes, доступность, лицензия и соответствие workspace grants.",
+    "У confirmatory протокола held-out targets доступны только scorer; actor capabilities не могут расширять верхние ограничения workspace.",
+    "Candidate ID НЕ входит в compatibility hash. Контролируемые условия, наборы данных, метрики, scoring, ресурсы, cache, concurrency и execution profile входят.",
+    "Demo mode не вызывает внешние модели и не является разрешением запускать live. Синтетические placeholder digests в примере не являются реальными артефактами.",
+    "Вызов runner требует отдельного действующего Approval с canonical plan hash, approver, scope, budget, expiry и оставшимся числом запусков.",
+    "Отмена и истечение approval не освобождают in-flight/unknown charge reserves; reconciliation продолжается до подтверждённого финансового исхода.",
+    "provider resolved version нельзя выдумывать: если API не раскрывает immutable revision, поле null и reproducibility limitation обязательны. Silent fallback запрещён.",
+    "При переносе in-flight reservation в unresolved exposure сумма удерживается ровно один раз; состояния взаимоисключающие, отмена не освобождает неизвестное обязательство."
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 128,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "nonnegativeUsd": {
+      "type": "number",
+      "minimum": 0
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "uri",
+        "sha256",
+        "media_type"
+      ],
+      "properties": {
+        "artifact_id": {
+          "$ref": "#/$defs/id"
+        },
+        "uri": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Логическая ссылка, разрешаемая registry. URI не даёт полномочия доступа и не запускает произвольное скачивание."
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 3
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "hypothesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "statement",
+        "metric_id",
+        "expected_direction",
+        "preregistered"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 10
+        },
+        "metric_id": {
+          "$ref": "#/$defs/id"
+        },
+        "expected_direction": {
+          "enum": [
+            "increase",
+            "decrease",
+            "equivalent",
+            "exploratory"
+          ]
+        },
+        "preregistered": {
+          "type": "boolean"
+        },
+        "minimum_effect": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "modelRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "requested_model",
+        "resolved_version",
+        "connection_ref",
+        "capability_profile",
+        "limitations"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requested_model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resolved_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "connection_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Ссылка на подключение, никогда не API key."
+        },
+        "capability_profile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "role",
+        "technology_type",
+        "adapter",
+        "configuration",
+        "model",
+        "max_subject_calls_per_attempt"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "baseline",
+            "candidate"
+          ]
+        },
+        "technology_type": {
+          "enum": [
+            "model",
+            "architecture",
+            "training",
+            "data",
+            "reasoning",
+            "memory",
+            "agent",
+            "tool",
+            "infrastructure",
+            "evaluation",
+            "simulation",
+            "product"
+          ]
+        },
+        "adapter": {
+          "type": "string",
+          "minLength": 1
+        },
+        "configuration": {
+          "$ref": "#/$defs/artifact"
+        },
+        "model": {
+          "$ref": "#/$defs/modelRef"
+        },
+        "max_subject_calls_per_attempt": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        }
+      }
+    },
+    "protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "artifact",
+        "runner_adapter",
+        "runner_version",
+        "scorer_id",
+        "scorer_version",
+        "repetitions",
+        "seed",
+        "randomization",
+        "cache_policy",
+        "warmup_attempts",
+        "failure_policy",
+        "tool_catalog_version",
+        "allowed_tools"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact": {
+          "$ref": "#/$defs/artifact"
+        },
+        "runner_adapter": {
+          "enum": [
+            "inspect",
+            "generic_command",
+            "synthetic_fixture"
+          ]
+        },
+        "runner_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scorer_id": {
+          "$ref": "#/$defs/id"
+        },
+        "scorer_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repetitions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "seed": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "randomization": {
+          "enum": [
+            "blocked_by_case",
+            "randomized_attempts",
+            "fixed_order"
+          ]
+        },
+        "cache_policy": {
+          "enum": [
+            "disabled",
+            "cold",
+            "warm",
+            "record_provider_state"
+          ]
+        },
+        "warmup_attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failure_policy": {
+          "enum": [
+            "count_task_errors_as_failure_report_infra_separately",
+            "all_errors_as_failure",
+            "prespecified_eligibility"
+          ]
+        },
+        "tool_catalog_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowed_tools": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "artifact",
+        "gold_artifact",
+        "split",
+        "case_count",
+        "case_manifest_sha256",
+        "scenario_counts",
+        "gold_access",
+        "synthetic",
+        "license_ref"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact": {
+          "$ref": "#/$defs/artifact"
+        },
+        "gold_artifact": {
+          "$ref": "#/$defs/artifact"
+        },
+        "split": {
+          "enum": [
+            "development",
+            "heldout",
+            "smoke"
+          ]
+        },
+        "case_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "case_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "scenario_counts": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "gold_access": {
+          "const": "scorer_only"
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "license_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "definition_version",
+        "unit",
+        "direction",
+        "primary",
+        "aggregation",
+        "missing_policy",
+        "zero_denominator"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "definition_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unit": {
+          "enum": [
+            "fraction",
+            "percent",
+            "score",
+            "seconds",
+            "usd",
+            "usd_per_100_tasks",
+            "usd_per_success",
+            "tokens",
+            "bytes",
+            "count",
+            "tasks_per_second"
+          ]
+        },
+        "direction": {
+          "enum": [
+            "maximize",
+            "minimize",
+            "descriptive"
+          ]
+        },
+        "primary": {
+          "type": "boolean"
+        },
+        "aggregation": {
+          "enum": [
+            "mean",
+            "median",
+            "p95",
+            "sum",
+            "macro_f1",
+            "micro_f1",
+            "ratio",
+            "custom_versioned"
+          ]
+        },
+        "missing_policy": {
+          "enum": [
+            "explicit_missing",
+            "failure",
+            "prespecified_exclusion"
+          ]
+        },
+        "zero_denominator": {
+          "enum": [
+            "undefined",
+            "zero_by_definition",
+            "not_applicable"
+          ]
+        }
+      }
+    },
+    "frozenArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "artifact"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "protocol",
+            "dataset_inputs",
+            "dataset_gold",
+            "case_manifest",
+            "source_code",
+            "prompt",
+            "runner",
+            "scorer",
+            "environment_image",
+            "dependency_lock",
+            "tool_catalog",
+            "price_snapshot",
+            "candidate_configuration"
+          ]
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/id"
+        },
+        "artifact": {
+          "$ref": "#/$defs/artifact"
+        }
+      }
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "principal_ref",
+        "capabilities"
+      ],
+      "properties": {
+        "principal_ref": {
+          "$ref": "#/$defs/id"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "identities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "researcher",
+        "subject",
+        "judge",
+        "human_approver_policy"
+      ],
+      "properties": {
+        "researcher": {
+          "$ref": "#/$defs/actor"
+        },
+        "subject": {
+          "$ref": "#/$defs/actor"
+        },
+        "judge": {
+          "$ref": "#/$defs/actor"
+        },
+        "human_approver_policy": {
+          "const": "workspace_human_with_run_approve_permission"
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "concurrency",
+        "max_attempts",
+        "max_provider_calls",
+        "max_judge_calls_per_attempt",
+        "attempt_timeout_seconds",
+        "wall_time_limit_seconds",
+        "cpu_cores",
+        "memory_mb",
+        "disk_mb",
+        "gpu_count",
+        "network",
+        "provider_policy",
+        "retry_policy",
+        "cancellation_policy"
+      ],
+      "properties": {
+        "profile": {
+          "enum": [
+            "synthetic",
+            "linux_gvisor",
+            "dedicated_vm",
+            "gpu_dedicated_vm"
+          ]
+        },
+        "concurrency": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_provider_calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_judge_calls_per_attempt": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "attempt_timeout_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "wall_time_limit_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cpu_cores": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "memory_mb": {
+          "type": "integer",
+          "minimum": 128
+        },
+        "disk_mb": {
+          "type": "integer",
+          "minimum": 128
+        },
+        "gpu_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "network": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "egress",
+            "allowed_hosts",
+            "direct_provider_access",
+            "control_database_access"
+          ],
+          "properties": {
+            "egress": {
+              "enum": [
+                "disabled",
+                "gateway_only",
+                "allowlist_proxy"
+              ]
+            },
+            "allowed_hosts": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "direct_provider_access": {
+              "const": false
+            },
+            "control_database_access": {
+              "const": false
+            }
+          }
+        },
+        "provider_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "silent_fallback",
+            "sdk_conformance_required",
+            "unknown_charge_handling"
+          ],
+          "properties": {
+            "silent_fallback": {
+              "const": "forbid"
+            },
+            "sdk_conformance_required": {
+              "const": true
+            },
+            "unknown_charge_handling": {
+              "const": "hold_reservation_and_reconcile"
+            }
+          }
+        },
+        "retry_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "safe_internal_max_retries",
+            "paid_call_unknown_outcome",
+            "explicit_additional_attempts"
+          ],
+          "properties": {
+            "safe_internal_max_retries": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "paid_call_unknown_outcome": {
+              "const": "reconcile_before_retry"
+            },
+            "explicit_additional_attempts": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "cancellation_policy": {
+          "const": "stop_new_dispatch_cancel_active_collect_receipts_preserve_unknown_reserves"
+        }
+      }
+    },
+    "estimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimum",
+        "expected",
+        "maximum"
+      ],
+      "properties": {
+        "minimum": {
+          "$ref": "#/$defs/nonnegativeUsd"
+        },
+        "expected": {
+          "$ref": "#/$defs/nonnegativeUsd"
+        },
+        "maximum": {
+          "$ref": "#/$defs/nonnegativeUsd"
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "currency",
+        "ledger_scope",
+        "discovery_budget_ref",
+        "limit_usd",
+        "estimate_usd",
+        "cost_lines_usd",
+        "price_snapshot",
+        "price_status",
+        "reservation_mode",
+        "unknown_charges_hold",
+        "in_flight_included"
+      ],
+      "properties": {
+        "currency": {
+          "const": "USD"
+        },
+        "ledger_scope": {
+          "const": "experiment"
+        },
+        "discovery_budget_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit_usd": {
+          "$ref": "#/$defs/nonnegativeUsd"
+        },
+        "estimate_usd": {
+          "$ref": "#/$defs/estimate"
+        },
+        "cost_lines_usd": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "researcher",
+            "subject",
+            "judge",
+            "compute",
+            "storage"
+          ],
+          "properties": {
+            "researcher": {
+              "$ref": "#/$defs/estimate"
+            },
+            "subject": {
+              "$ref": "#/$defs/estimate"
+            },
+            "judge": {
+              "$ref": "#/$defs/estimate"
+            },
+            "compute": {
+              "$ref": "#/$defs/estimate"
+            },
+            "storage": {
+              "$ref": "#/$defs/estimate"
+            }
+          }
+        },
+        "price_snapshot": {
+          "$ref": "#/$defs/artifact"
+        },
+        "price_status": {
+          "enum": [
+            "synthetic",
+            "estimated",
+            "verified_tariff_snapshot"
+          ]
+        },
+        "reservation_mode": {
+          "const": "atomic_upper_bound_before_dispatch"
+        },
+        "unknown_charges_hold": {
+          "const": true
+        },
+        "in_flight_included": {
+          "const": true
+        }
+      }
+    },
+    "approvalPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "human_required",
+        "plan_hash_required",
+        "separate_paid_pilot_approval",
+        "expires_after_hours",
+        "maximum_runs",
+        "changes_require_reapproval"
+      ],
+      "properties": {
+        "human_required": {
+          "const": true
+        },
+        "plan_hash_required": {
+          "const": true
+        },
+        "separate_paid_pilot_approval": {
+          "const": true
+        },
+        "expires_after_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8760
+        },
+        "maximum_runs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "changes_require_reapproval": {
+          "const": true
+        }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "paired",
+        "pairing_key",
+        "resampling_unit",
+        "confidence_level",
+        "bootstrap_resamples",
+        "analysis_seed",
+        "candidate_ids_excluded_from_compatibility_hash",
+        "judge_blinding",
+        "human_calibration",
+        "exclusions"
+      ],
+      "properties": {
+        "paired": {
+          "type": "boolean"
+        },
+        "pairing_key": {
+          "const": "case_id"
+        },
+        "resampling_unit": {
+          "const": "case_cluster_with_repetitions"
+        },
+        "confidence_level": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1
+        },
+        "bootstrap_resamples": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 1000000
+        },
+        "analysis_seed": {
+          "type": "integer"
+        },
+        "candidate_ids_excluded_from_compatibility_hash": {
+          "const": true
+        },
+        "judge_blinding": {
+          "enum": [
+            "blind_candidate_labels",
+            "not_applicable_deterministic"
+          ]
+        },
+        "human_calibration": {
+          "enum": [
+            "required_before_model_judge",
+            "not_applicable_deterministic"
+          ]
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "raw_days",
+        "derived_days",
+        "telemetry_days",
+        "delete_with_tombstone",
+        "redaction_policy_version"
+      ],
+      "properties": {
+        "raw_days": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "derived_days": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "telemetry_days": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "delete_with_tombstone": {
+          "const": true
+        },
+        "redaction_policy_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

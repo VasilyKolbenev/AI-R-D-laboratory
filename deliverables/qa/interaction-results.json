@@ -1,0 +1,62 @@
+[
+  {
+    "name": "01 candidate changes metrics",
+    "status": "pass"
+  },
+  {
+    "name": "01 comparison toggle",
+    "status": "pass"
+  },
+  {
+    "name": "01 methodology and evidence tabs",
+    "status": "pass"
+  },
+  {
+    "name": "01 explicit simulation confirmation",
+    "status": "pass"
+  },
+  {
+    "name": "01 JSON export",
+    "status": "pass"
+  },
+  {
+    "name": "01 saved idea survives panel reopening",
+    "status": "pass"
+  },
+  {
+    "name": "02 candidate selection",
+    "status": "pass"
+  },
+  {
+    "name": "02 comparison/evidence navigation",
+    "status": "pass"
+  },
+  {
+    "name": "02 approval gates local simulation",
+    "status": "pass"
+  },
+  {
+    "name": "03 map node changes inspector",
+    "status": "pass"
+  },
+  {
+    "name": "03 filter and view navigation",
+    "status": "pass"
+  },
+  {
+    "name": "03 CSV export",
+    "status": "pass"
+  },
+  {
+    "name": "03 approval gates and starts local simulation",
+    "status": "pass"
+  },
+  {
+    "name": "03 draft creation persists",
+    "status": "pass"
+  },
+  {
+    "name": "All interactions have no page errors",
+    "status": "pass"
+  }
+]

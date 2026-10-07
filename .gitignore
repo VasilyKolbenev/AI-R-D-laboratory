@@ -1,0 +1,35 @@
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+
+# Dependencies and build caches
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.next/
+dist/
+coverage/
+test-results/
+playwright-report/
+
+# Local editor and operating system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# Generated bundles and temporary review material
+/deliverables/*.zip
+/deliverables/qa/*.html.txt
+/deliverables/qa/static-review.txt
+/deliverables/qa/constell-v2-first-layout.png

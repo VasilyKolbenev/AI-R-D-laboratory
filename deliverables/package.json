@@ -1,0 +1,15 @@
+{
+  "name": "ai-rd-laboratory-docs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Build and verification tools for AI R&D Laboratory design artifacts",
+  "scripts": {
+    "diagrams": "node render_diagrams.cjs",
+    "check:constellation": "node qa/constellation-v2-check.cjs --revision-ready",
+    "check:alpha-docs": "node qa/alpha-plan-check.cjs"
+  },
+  "devDependencies": {
+    "@viz-js/viz": "3.25.0",
+    "playwright": "1.62.1"
+  }
+}

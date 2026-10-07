@@ -1,0 +1,31 @@
+digraph "dynamic-run" {
+graph [fontname="Segoe UI", bgcolor="#ffffff", pad="0.35", nodesep="0.4", ranksep="0.65", splines=polyline, labelloc="t", fontsize=22, fontcolor="#172435"];
+node [fontname="Segoe UI", shape=box, style="rounded,filled", fillcolor="#e9f0ff", color="#7696ce", fontcolor="#18385f", penwidth=1.2, fontsize=12, margin="0.2,0.16"];
+edge [fontname="Segoe UI", fontsize=10, fontcolor="#52647b", color="#9aacc2", arrowsize=0.65, penwidth=1.1];
+rankdir=LR;
+label="Dynamic view · Утверждённый эксперимент";
+user [label="Пользователь\n[Person]"];
+api [label="Control API\n[Container]"];
+workflow [label="Workflow worker\n[Container]"];
+runner [label="Runner coordinator\n[Container]"];
+sandbox [label="Sandbox pool\n[Container]"];
+gateway [label="Model Gateway\n[Container]"];
+provider [label="Provider\n[External System]"];
+measure [label="Measurement worker\n[Container]"];
+storage [label="Evidence store\n[Containers]\nPostgreSQL / S3"];
+user -> api [label="1. Подтверждает plan_hash + ceiling"];
+api -> storage [label="2. Approval + Run + outbox transaction"];
+api -> workflow [label="3. Доставляет idempotent command"];
+workflow -> runner [label="4. Запускает frozen manifest"];
+runner -> sandbox [label="4a. Isolated subject job"];
+sandbox -> gateway [label="5. Subject call через scoped token"];
+gateway -> api [label="6. Reserve cost exposure"];
+gateway -> provider [label="7. Request + operation ID"];
+gateway -> api [label="8. Settle usage / mark unknown"];
+sandbox -> runner [label="8a. Outputs + job receipt"];
+runner -> storage [label="9. Raw outputs + receipt"];
+workflow -> measure [label="10. Score saved outputs"];
+measure -> storage [label="11. Observations + validated facts"];
+api -> user [label="12. SSE status + report + evidence"];
+
+}

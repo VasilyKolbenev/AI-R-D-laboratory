@@ -1,0 +1,36 @@
+digraph "c4-contracts" {
+graph [fontname="Segoe UI", bgcolor="#ffffff", pad="0.35", nodesep="0.4", ranksep="0.65", splines=polyline, labelloc="t", fontsize=22, fontcolor="#172435"];
+node [fontname="Segoe UI", shape=box, style="rounded,filled", fillcolor="#e9f0ff", color="#7696ce", fontcolor="#18385f", penwidth=1.2, fontsize=12, margin="0.2,0.16"];
+edge [fontname="Segoe UI", fontsize=10, fontcolor="#52647b", color="#9aacc2", arrowsize=0.65, penwidth=1.1];
+rankdir=LR;
+label="C4 L4 · Контракты плана и исполнения";
+subgraph cluster_protocol {label="Protocol Registry · проектируемые программные контракты";style="rounded,dashed";color="#8aa7d0";fontcolor="#566b86";fontsize=15;
+plan [label="PlanVersion\n[Class]\nplan_id, hash, mode, budget\nvalidate(); freeze()"];
+protocol [label="ProtocolVersion\n[Class]\ntask, package/image hashes\nmetric policies; compatibility_key"];
+dataset [label="DatasetVersion\n[Class]\nartifact hash, split, sample IDs\nholdout policy"];
+candidate [label="CandidateSpec\n[Class]\nprovider/package, exact version\nrole; parameters; capabilities"];
+approval [label="Approval\n[Class]\nactor, plan_hash, scope, expiry\nauthorize(manifest)"];
+run [label="RunManifest\n[Class]\nrun_id, approval_id, plan_hash\nmaterialize(); verify()"];
+attempt [label="Attempt\n[Class]\ncandidate, sample, repeat, job_ref\nstatus; execution receipt"];
+observation [label="Observation\n[Class]\nmetric_id, unit, value, evidence\nscorer_version; provenance"];
+}
+subgraph cluster_ports {label="Внешние порты компонента";style="rounded,dashed";color="#8aa7d0";fontcolor="#566b86";fontsize=15;
+provider [label="ProviderAdapter\n[Interface]\ncapabilities / estimate / invoke / stream\ncancel / reconcile (if supported)", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+runner [label="RunnerAdapter\n[Interface]\nvalidate / prepare / submit / poll\ncollect / cancel; prepare optional", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+scorer [label="Scorer\n[Interface]\nscore(output, target, rubric)\nreturns Observation", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+comparison [label="ComparisonPolicy\n[Interface]\ncheck(run_a, run_b)\nreturns CompatibilityReport", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+}
+plan -> protocol [label="contains 1"];
+plan -> dataset [label="references 1..n"];
+plan -> candidate [label="contains 1..n"];
+approval -> plan [label="binds exact hash"];
+run -> approval [label="requires 1 valid"];
+run -> plan [label="materializes 1 frozen"];
+run -> attempt [label="creates 1..n"];
+attempt -> provider [label="requests subject call"];
+attempt -> runner [label="executes job"];
+scorer -> observation [label="produces 0..n"];
+attempt -> observation [label="evidence source"];
+comparison -> run [label="compares 2..n"];
+
+}

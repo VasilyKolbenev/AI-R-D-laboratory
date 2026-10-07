@@ -1,0 +1,38 @@
+digraph "c3-control" {
+graph [fontname="Segoe UI", bgcolor="#ffffff", pad="0.35", nodesep="0.4", ranksep="0.65", splines=polyline, labelloc="t", fontsize=22, fontcolor="#172435"];
+node [fontname="Segoe UI", shape=box, style="rounded,filled", fillcolor="#e9f0ff", color="#7696ce", fontcolor="#18385f", penwidth=1.2, fontsize=12, margin="0.2,0.16"];
+edge [fontname="Segoe UI", fontsize=10, fontcolor="#52647b", color="#9aacc2", arrowsize=0.65, penwidth=1.1];
+rankdir=LR;
+label="C4 L3 · Компоненты Control API";
+subgraph cluster_api {label="Control API · FastAPI";style="rounded,dashed";color="#8aa7d0";fontcolor="#566b86";fontsize=15;
+identity [label="Identity & Workspace Policy\n[Component]\nJWT / role policies\nПроверенный tenant context"];
+catalog [label="Source & Claim Catalog\n[Component]\nDomain service\nИсточники, claims и связи"];
+protocol [label="Protocol Registry\n[Component]\nVersioning / JSON Schema\nМетодика и immutable plan"];
+approval [label="Approval Service\n[Component]\nPolicy + plan hash\nЧеловек, scope, budget, expiry"];
+budget [label="Budget Ledger\n[Component]\nTransactional reservations\nРасход + in-flight + unknown"];
+registry [label="Run Registry & Outbox\n[Component]\nSQL transactions\nRun state и durable commands"];
+compare [label="Comparison Service\n[Component]\nCompatibility policy\nСопоставимые условия"];
+evidence [label="Evidence & Report Queries\n[Component]\nRead model / evidence refs\nГрафики и проверенные выводы"];
+}
+web [label="Web / Tool Broker\n[External Containers]\nДействия пользователя / агента", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+db [label="PostgreSQL\n[External Container]\nRLS / domain records", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+workflow [label="Workflow worker / Gateway\n[External Containers]\nКоманды и usage receipts", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+web -> identity [label="Authenticated REST"];
+identity -> catalog [label="Scoped access"];
+identity -> protocol [label="Scoped access"];
+identity -> approval [label="User role only"];
+protocol -> approval [label="Frozen plan hash"];
+approval -> budget [label="Approved ceiling"];
+approval -> registry [label="Create approved run"];
+workflow -> budget [label="reserve / settle / reconcile"];
+workflow -> registry [label="Idempotent events"];
+registry -> db [label="Atomic run + outbox"];
+catalog -> db [label="Snapshots / claims"];
+protocol -> db [label="Immutable versions"];
+budget -> db [label="Ledger transaction"];
+evidence -> db [label="Tenant-scoped query"];
+compare -> evidence [label="Compatible cohorts"];
+web -> compare [label="Compare runs"];
+web -> evidence [label="Report / chart / raw evidence"];
+
+}

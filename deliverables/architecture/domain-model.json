@@ -1,0 +1,963 @@
+{
+  "document": {
+    "title": "R&D Laboratory — proposed domain model",
+    "version": "0.1",
+    "date": "2026-10-07",
+    "status": "proposed_not_implemented",
+    "language": "ru",
+    "purpose": "Справочная модель сущностей, связей, переходов и invariants. Не миграция БД и не JSON Schema API."
+  },
+  "tenancy": {
+    "key": "workspace_id",
+    "required_on_tenant_entities": true,
+    "authorization": "Control API IdentityPolicy plus PostgreSQL RLS",
+    "runtime_roles": "non-owner roles without BYPASSRLS",
+    "pooling": "tenant context set transaction-locally and reset before reuse"
+  },
+  "entities": [
+    {
+      "name": "Workspace",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "owner_id",
+        "name",
+        "policy_version",
+        "retention_policy_id",
+        "created_at",
+        "deleted_at"
+      ],
+      "mutable": true
+    },
+    {
+      "name": "Principal",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "kind:human|researcher|subject|judge|collector|service",
+        "oidc_subject",
+        "permissions",
+        "connection_refs",
+        "disabled_at"
+      ],
+      "mutable": true
+    },
+    {
+      "name": "Source",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "kind",
+        "canonical_locator",
+        "owner_ref",
+        "license",
+        "access_policy",
+        "created_at",
+        "deleted_at"
+      ],
+      "mutable": true
+    },
+    {
+      "name": "SourceSnapshot",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "source_id",
+        "content_artifact_id",
+        "content_sha256",
+        "retrieved_at",
+        "upstream_revision",
+        "forward_metadata",
+        "parser_version"
+      ],
+      "immutable": true
+    },
+    {
+      "name": "ExtractionVersion",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "snapshot_id",
+        "version",
+        "parser_digest",
+        "text_artifact_id",
+        "page_offsets",
+        "warnings"
+      ],
+      "immutable": true
+    },
+    {
+      "name": "Technology",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "name",
+        "categories",
+        "task_families",
+        "modalities",
+        "source_refs"
+      ],
+      "mutable": true
+    },
+    {
+      "name": "Claim",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "snapshot_id",
+        "technology_id",
+        "statement",
+        "quote_span",
+        "scope",
+        "author_asserted",
+        "evidence_refs"
+      ],
+      "versioned": true
+    },
+    {
+      "name": "Research",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "question",
+        "technology_refs",
+        "claim_refs",
+        "discovery_budget_id",
+        "status",
+        "created_at"
+      ],
+      "mutable": true
+    },
+    {
+      "name": "Hypothesis",
+      "key": [
+        "id",
+        "version"
+      ],
+      "fields": [
+        "workspace_id",
+        "research_id",
+        "statement",
+        "metric_id",
+        "direction",
+        "minimum_effect",
+        "preregistered_at"
+      ],
+      "immutable": true
+    },
+    {
+      "name": "ProtocolVersion",
+      "key": [
+        "id",
+        "version"
+      ],
+      "fields": [
+        "workspace_id",
+        "artifact_id",
+        "runner_digest",
+        "scorer_digest",
+        "tool_catalog_digest",
+        "randomization",
+        "repetitions",
+        "timeout",
+        "cache_policy",
+        "concurrency",
+        "failure_policy"
+      ],
+      "immutable": true
+    },
+    {
+      "name": "DatasetVersion",
+      "key": [
+        "id",
+        "version"
+      ],
+      "fields": [
+        "workspace_id",
+        "input_artifact_id",
+        "gold_artifact_id",
+        "case_manifest_digest",
+        "split",
+        "case_count",
+        "license",
+        "synthetic",
+        "gold_access:scorer_only"
+      ],
+      "immutable": true
+    },
+    {
+      "name": "Candidate",
+      "key": [
+        "id",
+        "version"
+      ],
+      "fields": [
+        "workspace_id",
+        "technology_id",
+        "role",
+        "configuration_digest",
+        "requested_model_alias",
+        "resolved_version_nullable",
+        "adapter_version",
+        "prompt_digest",
+        "code_digest"
+      ],
+      "immutable": true
+    },
+    {
+      "name": "PlanVersion",
+      "key": [
+        "id",
+        "version"
+      ],
+      "fields": [
+        "workspace_id",
+        "research_id",
+        "canonical_body",
+        "canonical_sha256",
+        "schema_version",
+        "frozen_manifest_digest",
+        "protocol_ref",
+        "dataset_ref",
+        "candidate_refs",
+        "primary_metric_id",
+        "phase",
+        "mode",
+        "created_at"
+      ],
+      "immutable": true,
+      "contract": "experiment-plan.schema.json"
+    },
+    {
+      "name": "PlanReviewState",
+      "key": [
+        "plan_id",
+        "plan_version"
+      ],
+      "fields": [
+        "workspace_id",
+        "state",
+        "validation_result",
+        "last_event_id",
+        "updated_at"
+      ],
+      "mutable": true,
+      "note": "Review state хранится отдельно от immutable canonical body."
+    },
+    {
+      "name": "Approval",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "plan_id",
+        "plan_version",
+        "plan_sha256",
+        "approver_principal_id",
+        "scope",
+        "budget_limit",
+        "currency",
+        "expires_at",
+        "maximum_runs",
+        "issued_at",
+        "signature_ref"
+      ],
+      "immutable": true
+    },
+    {
+      "name": "ApprovalUsage",
+      "key": [
+        "approval_id"
+      ],
+      "fields": [
+        "workspace_id",
+        "consumed_runs",
+        "revoked_at",
+        "revocation_reason",
+        "updated_at"
+      ],
+      "mutable": true
+    },
+    {
+      "name": "BudgetAccount",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "scope:discovery|pilot|experiment|workspace",
+        "parent_account_id",
+        "limit_minor_units",
+        "currency",
+        "policy_version"
+      ],
+      "mutable": true
+    },
+    {
+      "name": "BudgetLedgerEntry",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "account_id",
+        "reservation_id",
+        "run_id",
+        "attempt_id",
+        "request_id",
+        "kind:reserve|settle|release|unknown|adjustment",
+        "amount_minor_units",
+        "actor_role",
+        "usage_artifact_id",
+        "price_snapshot_id",
+        "idempotency_key",
+        "created_at"
+      ],
+      "append_only": true
+    },
+    {
+      "name": "Run",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "plan_id",
+        "plan_version",
+        "plan_sha256",
+        "approval_id",
+        "workflow_id",
+        "run_manifest_id",
+        "state",
+        "financial_state",
+        "idempotency_key",
+        "started_at",
+        "ended_at",
+        "cancellation_receipt_id"
+      ],
+      "mutable_projection": true
+    },
+    {
+      "name": "Attempt",
+      "key": [
+        "id"
+      ],
+      "unique": [
+        "run_id",
+        "candidate_id",
+        "case_id",
+        "repetition",
+        "sequence"
+      ],
+      "fields": [
+        "workspace_id",
+        "request_id",
+        "parent_attempt_id",
+        "status",
+        "input_artifact_id",
+        "output_artifact_id",
+        "tool_trace_id",
+        "effective_model_id",
+        "provider_fingerprint_nullable",
+        "timings",
+        "usage_artifact_id",
+        "retry_reason",
+        "environment_digest"
+      ],
+      "immutable_when_terminal": true
+    },
+    {
+      "name": "Observation",
+      "key": [
+        "id"
+      ],
+      "unique": [
+        "attempt_id",
+        "metric_id",
+        "scorer_version",
+        "observation_index"
+      ],
+      "fields": [
+        "workspace_id",
+        "value_nullable",
+        "unit",
+        "status:valid|missing|task_error|infra_error|scoring_error",
+        "scorer_id",
+        "scorer_version",
+        "source_artifact_refs",
+        "collector_identity",
+        "recorded_at"
+      ],
+      "immutable": true
+    },
+    {
+      "name": "AggregateVersion",
+      "key": [
+        "id",
+        "version"
+      ],
+      "fields": [
+        "workspace_id",
+        "run_id",
+        "metric_id",
+        "selection_digest",
+        "analysis_code_digest",
+        "sample_count",
+        "case_count",
+        "estimate",
+        "interval",
+        "bootstrap_seed",
+        "exclusions",
+        "observation_refs"
+      ],
+      "immutable": true
+    },
+    {
+      "name": "Comparison",
+      "key": [
+        "id",
+        "version"
+      ],
+      "fields": [
+        "workspace_id",
+        "run_refs",
+        "policy_version",
+        "compatibility_hash",
+        "status:compatible|conditional|incompatible",
+        "controlled_differences",
+        "paired_case_manifest",
+        "aggregate_refs",
+        "caveats"
+      ],
+      "immutable": true
+    },
+    {
+      "name": "Evidence",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "kind:author_claim|external_replication|lab_observation",
+        "source_snapshot_id_nullable",
+        "observation_refs",
+        "aggregate_refs",
+        "artifact_refs",
+        "scope"
+      ],
+      "immutable": true
+    },
+    {
+      "name": "FindingVersion",
+      "key": [
+        "id",
+        "version"
+      ],
+      "fields": [
+        "workspace_id",
+        "research_id",
+        "statement",
+        "evidence_refs",
+        "scope",
+        "uncertainty",
+        "limitations",
+        "author_identity",
+        "supersedes_version",
+        "reason_for_change"
+      ],
+      "immutable": true
+    },
+    {
+      "name": "ReportVersion",
+      "key": [
+        "id",
+        "version"
+      ],
+      "fields": [
+        "workspace_id",
+        "research_id",
+        "finding_refs",
+        "artifact_id",
+        "generation_recipe",
+        "author_identity",
+        "supersedes_version"
+      ],
+      "immutable": true
+    },
+    {
+      "name": "Artifact",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "content_sha256",
+        "storage_locator",
+        "media_type",
+        "size_bytes",
+        "sensitivity",
+        "license_ref",
+        "status:quarantined|verified|deleted",
+        "created_at",
+        "retention_until",
+        "tombstone_id"
+      ],
+      "content_immutable_until_deletion": true
+    },
+    {
+      "name": "OutboxEvent",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "aggregate_id",
+        "aggregate_version",
+        "event_type",
+        "payload",
+        "correlation_id",
+        "causation_id",
+        "idempotency_key",
+        "created_at",
+        "delivered_at"
+      ],
+      "append_only_payload": true
+    },
+    {
+      "name": "DeletionTombstone",
+      "key": [
+        "id"
+      ],
+      "fields": [
+        "workspace_id",
+        "entity_type",
+        "entity_id",
+        "requested_by",
+        "requested_at",
+        "completed_at",
+        "purge_status",
+        "backup_expiry",
+        "reason_code"
+      ],
+      "note": "Без содержимого удалённых документов, промптов и ответов."
+    }
+  ],
+  "relationships": [
+    [
+      "Workspace",
+      "1:N",
+      "tenant-owned entities"
+    ],
+    [
+      "Source",
+      "1:N",
+      "SourceSnapshot"
+    ],
+    [
+      "SourceSnapshot",
+      "1:N",
+      "ExtractionVersion"
+    ],
+    [
+      "SourceSnapshot",
+      "1:N",
+      "Claim"
+    ],
+    [
+      "Technology",
+      "N:M",
+      "Source"
+    ],
+    [
+      "Research",
+      "N:M",
+      "Claim"
+    ],
+    [
+      "Research",
+      "1:N",
+      "Hypothesis"
+    ],
+    [
+      "Research",
+      "1:N",
+      "PlanVersion"
+    ],
+    [
+      "PlanVersion",
+      "N:1",
+      "ProtocolVersion"
+    ],
+    [
+      "PlanVersion",
+      "N:1",
+      "DatasetVersion"
+    ],
+    [
+      "PlanVersion",
+      "N:M",
+      "Candidate"
+    ],
+    [
+      "PlanVersion",
+      "1:N",
+      "Approval"
+    ],
+    [
+      "Approval",
+      "1:N bounded by maximum_runs",
+      "Run"
+    ],
+    [
+      "Run",
+      "1:N",
+      "Attempt"
+    ],
+    [
+      "Attempt",
+      "1:N",
+      "Observation"
+    ],
+    [
+      "Observation",
+      "N:M",
+      "AggregateVersion"
+    ],
+    [
+      "AggregateVersion",
+      "N:M",
+      "Evidence"
+    ],
+    [
+      "Evidence",
+      "N:M",
+      "FindingVersion"
+    ],
+    [
+      "FindingVersion",
+      "N:M",
+      "ReportVersion"
+    ],
+    [
+      "BudgetAccount",
+      "1:N",
+      "BudgetLedgerEntry"
+    ],
+    [
+      "Run",
+      "1:N",
+      "BudgetLedgerEntry"
+    ],
+    [
+      "Run",
+      "N:M",
+      "Comparison"
+    ]
+  ],
+  "state_machines": {
+    "plan_review": {
+      "states": [
+        "draft",
+        "validating",
+        "awaiting_approval",
+        "approved",
+        "rejected",
+        "expired",
+        "superseded"
+      ],
+      "transitions": [
+        [
+          "draft",
+          "validating"
+        ],
+        [
+          "validating",
+          "draft"
+        ],
+        [
+          "validating",
+          "awaiting_approval"
+        ],
+        [
+          "awaiting_approval",
+          "approved"
+        ],
+        [
+          "awaiting_approval",
+          "rejected"
+        ],
+        [
+          "awaiting_approval",
+          "expired"
+        ],
+        [
+          "approved",
+          "expired"
+        ],
+        [
+          "approved",
+          "superseded"
+        ]
+      ]
+    },
+    "run": {
+      "states": [
+        "queued",
+        "preparing",
+        "running",
+        "scoring",
+        "completed",
+        "cancel_requested",
+        "cancelled",
+        "blocked",
+        "failed",
+        "execution_unknown",
+        "partial"
+      ],
+      "transitions": [
+        [
+          "queued",
+          "preparing"
+        ],
+        [
+          "preparing",
+          "running"
+        ],
+        [
+          "running",
+          "scoring"
+        ],
+        [
+          "scoring",
+          "completed"
+        ],
+        [
+          "queued",
+          "cancel_requested"
+        ],
+        [
+          "preparing",
+          "cancel_requested"
+        ],
+        [
+          "running",
+          "cancel_requested"
+        ],
+        [
+          "scoring",
+          "cancel_requested"
+        ],
+        [
+          "execution_unknown",
+          "cancel_requested"
+        ],
+        [
+          "cancel_requested",
+          "cancelled"
+        ],
+        [
+          "running",
+          "execution_unknown"
+        ],
+        [
+          "execution_unknown",
+          "running"
+        ],
+        [
+          "execution_unknown",
+          "scoring"
+        ],
+        [
+          "execution_unknown",
+          "failed"
+        ],
+        [
+          "queued",
+          "blocked"
+        ],
+        [
+          "preparing",
+          "blocked"
+        ],
+        [
+          "running",
+          "blocked"
+        ],
+        [
+          "blocked",
+          "preparing"
+        ],
+        [
+          "blocked",
+          "running"
+        ],
+        [
+          "blocked",
+          "cancel_requested"
+        ],
+        [
+          "queued",
+          "failed"
+        ],
+        [
+          "preparing",
+          "failed"
+        ],
+        [
+          "running",
+          "failed"
+        ],
+        [
+          "scoring",
+          "failed"
+        ],
+        [
+          "cancel_requested",
+          "partial"
+        ],
+        [
+          "running",
+          "partial"
+        ]
+      ],
+      "note": "Domain projection updated by validated events. Resumption requires valid approval, budget and reconciliation. Cancellation does not clear unknown charges. A partial terminal state preserves a usable subset after a declared partial finish or a confirmed stop; unresolved charges remain separately tracked."
+    },
+    "financial": {
+      "states": [
+        "none",
+        "reserved",
+        "settled",
+        "charge_unknown",
+        "reconciled"
+      ],
+      "transitions": [
+        [
+          "none",
+          "reserved"
+        ],
+        [
+          "reserved",
+          "settled"
+        ],
+        [
+          "reserved",
+          "charge_unknown"
+        ],
+        [
+          "charge_unknown",
+          "reconciled"
+        ]
+      ],
+      "note": "Per-request ledger entries compose run financial state. Cancelled/completed run can retain charge_unknown. Only reconciled evidence permits release or adjustment."
+    }
+  },
+  "event_types": [
+    "source.received",
+    "source.snapshot.created",
+    "claim.extracted",
+    "plan.proposed",
+    "plan.validated",
+    "plan.frozen",
+    "approval.issued",
+    "approval.revoked",
+    "run.requested",
+    "run.started",
+    "attempt.dispatched",
+    "provider.charge.unknown",
+    "attempt.completed",
+    "observation.recorded",
+    "analysis.completed",
+    "run.cancel.requested",
+    "run.cancel.receipt",
+    "run.completed",
+    "run.failed",
+    "report.version.created",
+    "comparison.created",
+    "artifact.deletion.requested",
+    "artifact.deletion.completed"
+  ],
+  "invariants": [
+    "Researcher cannot approve runs or write raw observations; approver is a human principal with explicit permission.",
+    "Subject cannot read held-out gold targets. Judge and subject permissions are distinct even when using the same external provider.",
+    "PlanVersion body and frozen manifests are immutable. Changed code, data, prompt, model, tools or scorer create a new version and invalidate previous scope.",
+    "Confirmation of a paid pilot is separate from discovery allowance and confirmatory experiment approval.",
+    "Approval canonical hash, workspace, expiry, remaining run count and budget must match at dispatch.",
+    "Budget reserve, actual charges, in-flight and unresolved exposure participate atomically in remaining budget.",
+    "Unknown paid-call outcomes are reconciled before any retry; cancellation does not release unresolved reserves.",
+    "Silent provider/model fallback is forbidden. Store alias, effective model ID and immutable version only when actually available.",
+    "Native SDK billed paths require conformance probe; otherwise restrict SDK to approved discovery preparation.",
+    "PostgreSQL transactions persist domain change plus outbox. Event consumers and external side effects are idempotent at their supported boundary, not falsely globally exactly-once.",
+    "Temporal orchestration state and PostgreSQL domain projection are different sources for different purposes; reconciler detects divergence.",
+    "Repetition-level observations are nested within case; paired bootstrap resamples case clusters, not independent repetitions.",
+    "Comparison compatibility hash excludes candidate ID and includes controlled protocol/dataset/scoring/environment conditions.",
+    "Reinterpreting a result creates a new FindingVersion/ReportVersion; raw evidence is not overwritten.",
+    "Immutable evidence can be legally deleted under retention; tombstones preserve minimal audit without content.",
+    "SDK researcher shell and subject execution live in isolated coordinator-managed sandboxes; no host mounts, Docker socket or direct control database access.",
+    "A contract-valid demo with placeholder hashes does not pass live artifact validation or provide execution authorization.",
+    "Reserved and unresolved exposure are mutually exclusive accounting categories: timeout atomically transfers exposure without double counting or release.",
+    "Private Telegram uses getUpdates polling; hosted HTTPS can use webhook. Delivery modes are mutually exclusive for a bot and both deduplicate update_id.",
+    "Existing S3 presigned links expire by short TTL or object removal, not imaginary per-link instant revocation. Sensitive downloads use an authorizing proxy."
+  ],
+  "interfaces": {
+    "ProviderAdapter": {
+      "methods": [
+        "capabilities",
+        "estimate",
+        "invoke",
+        "stream",
+        "cancel",
+        "reconcile"
+      ],
+      "capability_gated": [
+        "stream",
+        "cancel",
+        "reconcile"
+      ],
+      "note": "Unsupported cancellation or reconciliation is explicit; unknown charges remain held for later billing/manual reconciliation."
+    },
+    "RunnerAdapter": {
+      "methods": [
+        "validate",
+        "prepare",
+        "submit",
+        "poll",
+        "collect",
+        "cancel"
+      ],
+      "optional": [
+        "prepare"
+      ]
+    },
+    "Scorer": {
+      "methods": [
+        "score"
+      ],
+      "trusted_execution": "curated builtins only",
+      "custom_execution": "coordinator-managed isolated evaluation sandbox, validated result envelope, scoped held-out grants"
+    },
+    "ComparisonPolicy": {
+      "methods": [
+        "compatibility",
+        "pair_cases",
+        "compare"
+      ],
+      "candidate_id_in_compatibility_hash": false
+    }
+  }
+}

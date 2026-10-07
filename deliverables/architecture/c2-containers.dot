@@ -1,0 +1,55 @@
+digraph "c2-containers" {
+graph [fontname="Segoe UI", bgcolor="#ffffff", pad="0.35", nodesep="0.4", ranksep="0.65", splines=polyline, labelloc="t", fontsize=22, fontcolor="#172435"];
+node [fontname="Segoe UI", shape=box, style="rounded,filled", fillcolor="#e9f0ff", color="#7696ce", fontcolor="#18385f", penwidth=1.2, fontsize=12, margin="0.2,0.16"];
+edge [fontname="Segoe UI", fontsize=10, fontcolor="#52647b", color="#9aacc2", arrowsize=0.65, penwidth=1.1];
+rankdir=TB;
+label="C4 L2 · Контейнеры и связи";
+subgraph cluster_lab {label="R&D Laboratory";style="rounded,dashed";color="#8aa7d0";fontcolor="#566b86";fontsize=15;
+subgraph cluster_trusted {label="Trusted application services";style="rounded,dashed";color="#8aa7d0";fontcolor="#566b86";fontsize=15;
+web [label="Web workspace\n[Container]\nNext.js / React / TS\nПланы, отчёты, сравнения"];
+api [label="Control API\n[Container]\nFastAPI / PostgreSQL client\nДоменные правила и доступ"];
+workflow [label="Workflow worker\n[Container]\nPython / Temporal SDK\nResearch и Run workflows"];
+gateway [label="Model Gateway\n[Container]\nPython / native adapters\nРазрешения, usage и лимиты"];
+runner [label="Runner coordinator\n[Container]\nPython / Inspect adapters\nJobs, receipts, сбор outputs"];
+measure [label="Measurement worker\n[Container]\nPolars / DuckDB / SciPy\nTrusted built-ins; validated facts"];
+temporal [label="Temporal\n[Container]\nDurable execution service\nWorkflow history и task queues"];
+db [label="PostgreSQL\n[Container: Database]\nSQL / RLS / optional pgvector\nПланы, approvals, ledger, lineage"];
+objects [label="Object storage\n[Container: Store]\nS3 API / dev filesystem\nСнимки, наборы, outputs, отчёты"];
+}
+subgraph cluster_agent {label="Researcher runtime trust boundary";style="rounded,dashed";color="#a290bf";fontcolor="#566b86";fontsize=15;
+runtime [label="Agent runtime\n[Container]\nNative SDKs / Codex / Claude\nScoped researcher sessions;\nизолированное выполнение tools"];
+}
+subgraph cluster_execution {label="Evaluated subject trust boundary";style="rounded,dashed";color="#c39876";fontcolor="#566b86";fontsize=15;
+sandbox [label="Sandbox pool\n[Container]\nOCI / gVisor or VM\nSubject / custom scorer jobs;\nразные tokens и права на artifacts"];
+}
+}
+providers [label="Model providers\n[External System]\nHTTPS\nResearch / subject / judge", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+input [label="Telegram / Web / GitHub / HF\n[External Systems]\nHTTPS\nМатериалы и версии", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+idp [label="Identity provider\n[External System]\nOIDC\nАккаунты", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+web -> api [label="REST JSON / SSE"];
+web -> idp [label="OIDC login"];
+api -> idp [label="JWT / JWKS validation"];
+input -> api [label="Telegram webhook: hosted HTTPS"];
+api -> db [label="SQL: domain, outbox, ledger"];
+api -> objects [label="S3: signed object access"];
+api -> temporal [label="gRPC: start / update / cancel"];
+workflow -> temporal [label="gRPC: poll tasks / history"];
+workflow -> api [label="Internal REST: domain commands"];
+workflow -> input [label="HTTPS: snapshots / revisions;\nTelegram getUpdates: private profile"];
+workflow -> runtime [label="RPC: scoped research session"];
+runtime -> workflow [label="Tool Broker: scoped actions / evidence"];
+runtime -> gateway [label="Native API proxy: research calls"];
+workflow -> runner [label="Activity: approved manifest"];
+runner -> sandbox [label="Job API: launch / stop / collect"];
+sandbox -> gateway [label="Scoped run token: subject calls"];
+gateway -> api [label="Atomic reserve / settle"];
+gateway -> providers [label="Native HTTPS APIs"];
+runner -> objects [label="S3: outputs + execution receipt"];
+runner -> api [label="Run / attempt status"];
+workflow -> measure [label="Activity: score artifact refs"];
+measure -> objects [label="S3: read raw, write observations"];
+measure -> gateway [label="Scoped judge calls"];
+measure -> runner [label="Custom scorers: isolated eval jobs"];
+measure -> api [label="Validated observations / reports"];
+
+}

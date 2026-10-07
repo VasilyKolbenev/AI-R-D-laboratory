@@ -1,0 +1,516 @@
+{
+  "schema_version": "0.1.0",
+  "status": "proposed_seed_configuration",
+  "created_at": "2026-10-07",
+  "locale": "ru-RU",
+  "execution_implemented": false,
+  "description": "Предлагаемая расширяемая таксономия. Наличие записи не означает доступность исполнителя или подтверждённую эффективность технологии.",
+  "axes": {
+    "object_family": {
+      "cardinality": "many",
+      "references": "object_families"
+    },
+    "primary_task": {
+      "cardinality": "one",
+      "references": "tasks"
+    },
+    "secondary_tasks": {
+      "cardinality": "many",
+      "references": "tasks"
+    },
+    "research_mode": {
+      "cardinality": "one",
+      "references": "research_modes"
+    },
+    "input_modalities": {
+      "cardinality": "many",
+      "values": [
+        "text",
+        "image",
+        "audio",
+        "video",
+        "structured_data",
+        "3d",
+        "sensor",
+        "mixed"
+      ]
+    },
+    "output_modalities": {
+      "cardinality": "many",
+      "values": [
+        "text",
+        "image",
+        "audio",
+        "video",
+        "structured_data",
+        "3d",
+        "action",
+        "mixed"
+      ]
+    },
+    "languages": {
+      "cardinality": "many",
+      "format": "BCP47"
+    },
+    "domains": {
+      "cardinality": "many",
+      "values": "workspace-defined"
+    },
+    "conditions": {
+      "cardinality": "many",
+      "fields": [
+        "input_size",
+        "history_length",
+        "noise_level",
+        "task_steps",
+        "tool_count",
+        "concurrency",
+        "data_shift",
+        "resource_budget",
+        "human_involvement"
+      ]
+    },
+    "execution_profile": {
+      "cardinality": "one",
+      "fields": [
+        "provider_api",
+        "sdk_session",
+        "cpu_sandbox",
+        "gpu_vm",
+        "simulator",
+        "physical_environment"
+      ]
+    }
+  },
+  "object_families": [
+    {
+      "id": "foundation_models",
+      "label": "Базовые модели",
+      "applies_to": "Языковые и мультимодальные модели общего назначения.",
+      "caveat": "Проверять конкретную версию, модальности и лимиты."
+    },
+    {
+      "id": "specialist_models",
+      "label": "Специализированные модели",
+      "applies_to": "Речь, зрение, генерация медиа и embeddings.",
+      "caveat": "Разным выходам нужны разные критерии качества."
+    },
+    {
+      "id": "decision_predictive_models",
+      "label": "Решения и прогнозы",
+      "applies_to": "Маршрутизаторы, классификаторы, прогнозные и классические ML-модели.",
+      "caveat": "Учитывать дисбаланс классов и цену ошибки."
+    },
+    {
+      "id": "architectures",
+      "label": "Архитектуры",
+      "applies_to": "Внимание, MoE, альтернативные блоки, представления данных.",
+      "caveat": "Отделять эффект архитектуры от данных и масштаба."
+    },
+    {
+      "id": "training_adaptation",
+      "label": "Обучение и адаптация",
+      "applies_to": "Fine-tuning, RL, дистилляция, непрерывное обучение.",
+      "caveat": "Фиксировать вычисления, данные и исходный checkpoint."
+    },
+    {
+      "id": "inference_reasoning",
+      "label": "Способы решения",
+      "applies_to": "Промпты, декомпозиция, поиск решений, самопроверка.",
+      "caveat": "Сравнивать при заявленном бюджете попыток."
+    },
+    {
+      "id": "knowledge_memory",
+      "label": "Знания, поиск, память",
+      "applies_to": "RAG, ранжирование, графы знаний, обновление контекста.",
+      "caveat": "Разделять извлечение факта и его использование."
+    },
+    {
+      "id": "agent_systems",
+      "label": "Агентные системы",
+      "applies_to": "Планирование, несколько агентов, оркестрация, восстановление.",
+      "caveat": "Оценивать завершение задачи и вмешательства человека."
+    },
+    {
+      "id": "tools_protocols",
+      "label": "Инструменты и протоколы",
+      "applies_to": "API, SDK, MCP, браузер, управление компьютером.",
+      "caveat": "Проверять совместимость, права и внешние эффекты."
+    },
+    {
+      "id": "data_pipelines",
+      "label": "Данные и подготовка",
+      "applies_to": "Датасеты, разметка, синтетика, очистка и отбор.",
+      "caveat": "Проверять утечки, дубликаты и происхождение."
+    },
+    {
+      "id": "evaluation_methods",
+      "label": "Методы оценки",
+      "applies_to": "Бенчмарки, scorers, LLM-судьи, human evaluation.",
+      "caveat": "Оценщик тоже требует калибровки и валидации."
+    },
+    {
+      "id": "controls_observability",
+      "label": "Контроль и наблюдение",
+      "applies_to": "Проверка фактов, интерпретация, защитные механизмы, мониторинг.",
+      "caveat": "Ложные блокировки измерять вместе с пропусками."
+    },
+    {
+      "id": "efficiency_serving",
+      "label": "Оптимизация и обслуживание",
+      "applies_to": "Квантование, кэш, маршрутизация, inference-серверы, оборудование.",
+      "caveat": "Фиксировать нагрузку, прогрев и порог качества."
+    },
+    {
+      "id": "simulation_embodied",
+      "label": "Симуляции и управление",
+      "applies_to": "Модели мира, симуляторы, робототехника, физические устройства.",
+      "caveat": "Результат симуляции не гарантирует перенос."
+    },
+    {
+      "id": "products_workflows",
+      "label": "Продукты и процессы",
+      "applies_to": "Готовые помощники, автоматизация, взаимодействие человека с ИИ.",
+      "caveat": "Учитывать настройку, поддержку и итоговую пользу."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "classification_routing",
+      "label": "Классификация и выбор",
+      "applies_to": "Класс, действие, инструмент, отказ.",
+      "initial_metric_family": "quality"
+    },
+    {
+      "id": "extraction_structuring",
+      "label": "Извлечение и структура",
+      "applies_to": "Факты, поля, таблицы, соблюдение схемы.",
+      "initial_metric_family": "quality"
+    },
+    {
+      "id": "retrieval_ranking",
+      "label": "Поиск и ранжирование",
+      "applies_to": "Релевантные документы, рекомендации, порядок выдачи.",
+      "initial_metric_family": "grounding"
+    },
+    {
+      "id": "grounded_qa",
+      "label": "Ответы по источникам",
+      "applies_to": "Вопросы, обзоры, синтез проверяемых сведений.",
+      "initial_metric_family": "grounding"
+    },
+    {
+      "id": "reasoning",
+      "label": "Рассуждение",
+      "applies_to": "Логика, математика, решение ограничений.",
+      "initial_metric_family": "quality"
+    },
+    {
+      "id": "coding",
+      "label": "Программирование",
+      "applies_to": "Создание, изменение, проверка и отладка кода.",
+      "initial_metric_family": "quality"
+    },
+    {
+      "id": "text_transformation",
+      "label": "Преобразование текста",
+      "applies_to": "Перевод, суммаризация, редактура.",
+      "initial_metric_family": "quality"
+    },
+    {
+      "id": "perception",
+      "label": "Восприятие",
+      "applies_to": "OCR, речь, объекты, понимание видео.",
+      "initial_metric_family": "quality"
+    },
+    {
+      "id": "content_generation",
+      "label": "Генерация и редактирование",
+      "applies_to": "Текст, изображения, звук, видео, 3D.",
+      "initial_metric_family": "controllability"
+    },
+    {
+      "id": "prediction_anomalies",
+      "label": "Прогноз и аномалии",
+      "applies_to": "Временные ряды, вероятности, необычные события.",
+      "initial_metric_family": "reliability"
+    },
+    {
+      "id": "memory_adaptation",
+      "label": "Память и адаптация",
+      "applies_to": "Сохранение, обновление, забывание, персонализация.",
+      "initial_metric_family": "memory_adaptation"
+    },
+    {
+      "id": "planning_tools",
+      "label": "Планирование и инструменты",
+      "applies_to": "Многошаговые процессы, восстановление после сбоев.",
+      "initial_metric_family": "reliability"
+    },
+    {
+      "id": "dialogue",
+      "label": "Диалог и сотрудничество",
+      "applies_to": "Уточнение, помощь, передача управления человеку.",
+      "initial_metric_family": "controllability"
+    },
+    {
+      "id": "environment_control",
+      "label": "Управление средой",
+      "applies_to": "Действия в симуляции и физическом мире.",
+      "initial_metric_family": "controllability"
+    }
+  ],
+  "metric_families": [
+    {
+      "id": "quality",
+      "label": "Качество",
+      "examples": "Accuracy, F1, task success, профильный rubric.",
+      "applies_to": "Задачи с эталоном или явными критериями.",
+      "caveat": "Указать знаменатель, версию scorer и неопределённость.",
+      "default_visual": "interval_points"
+    },
+    {
+      "id": "grounding",
+      "label": "Связь с источниками",
+      "examples": "Recall@k, nDCG, подтверждённость утверждений.",
+      "applies_to": "Поиск, RAG, извлечение и исследовательский обзор.",
+      "caveat": "Наличие цитаты не доказывает правильность вывода.",
+      "default_visual": "coverage_matrix"
+    },
+    {
+      "id": "cost",
+      "label": "Стоимость",
+      "examples": "Цена задачи, цена успеха, стоимость эксперимента.",
+      "applies_to": "Платные модели, инструменты, compute, хранение.",
+      "caveat": "Разделять реальные расходы, прогноз и неизвестное начисление.",
+      "default_visual": "cost_quality_scatter"
+    },
+    {
+      "id": "latency_throughput",
+      "label": "Скорость",
+      "examples": "p50/p95, время первого ответа, задач/сек.",
+      "applies_to": "Интерактивные и массовые сценарии.",
+      "caveat": "Фиксировать нагрузку, очередь, retries и прогрев.",
+      "default_visual": "latency_distribution"
+    },
+    {
+      "id": "reliability",
+      "label": "Надёжность",
+      "examples": "Разброс, ошибки, восстановление, калибровка уверенности.",
+      "applies_to": "Повторы, сдвиг данных, сбои, вероятностные решения.",
+      "caveat": "Повторы кейса не считать независимыми задачами.",
+      "default_visual": "degradation_curve"
+    },
+    {
+      "id": "controllability",
+      "label": "Управляемость",
+      "examples": "Следование условиям, нежелательные действия, вмешательства.",
+      "applies_to": "Генерация, агенты, инструменты и диалог.",
+      "caveat": "Отказы могут быть правильными; нужна цена разных ошибок.",
+      "default_visual": "confusion_matrix"
+    },
+    {
+      "id": "resources",
+      "label": "Ресурсы",
+      "examples": "CPU/GPU-время, RAM/VRAM, диск, энергия.",
+      "applies_to": "Локальное исполнение и доступная телеметрия.",
+      "caveat": "Не приписывать hosted API недоступные аппаратные измерения.",
+      "default_visual": "resource_timeline"
+    },
+    {
+      "id": "memory_adaptation",
+      "label": "Память и обучение",
+      "examples": "Актуальность, stale-fact rate, забывание, перенос.",
+      "applies_to": "Изменение знаний и адаптация к новым данным.",
+      "caveat": "Разделять полезное забывание и потерю нужного знания.",
+      "default_visual": "degradation_curve"
+    },
+    {
+      "id": "integration_effort",
+      "label": "Внедрение и поддержка",
+      "examples": "Часы настройки, изменения кода, операции, ограничения лицензий.",
+      "applies_to": "Выбор технологии для реального процесса.",
+      "caveat": "Трудозатраты задаются диапазоном и зависят от среды.",
+      "default_visual": "integration_profile"
+    }
+  ],
+  "research_modes": [
+    {
+      "id": "evidence_review",
+      "label": "Разбор доказательств",
+      "purpose": "Проверить заявления, первоисточники и доступность воспроизведения.",
+      "caveat": "Нет локального измерения эффекта; discovery имеет свой лимит.",
+      "experiment_approval_required": false
+    },
+    {
+      "id": "reproduction",
+      "label": "Воспроизведение",
+      "purpose": "Повторить заявленную методику с зафиксированными артефактами.",
+      "caveat": "Изменённые условия отмечаются; одного кандидата достаточно.",
+      "experiment_approval_required": true
+    },
+    {
+      "id": "benchmark",
+      "label": "Сравнение",
+      "purpose": "Сопоставить кандидатов на общей методике и разумном baseline.",
+      "caveat": "Минимум два кандидата; проверка совместимости обязательна.",
+      "experiment_approval_required": true
+    },
+    {
+      "id": "ablation",
+      "label": "Разбор вклада",
+      "purpose": "Убрать или изменить компонент, сохранив остальные условия.",
+      "caveat": "Без контроля взаимодействий нельзя приписать эффект одному фактору.",
+      "experiment_approval_required": true
+    },
+    {
+      "id": "stress",
+      "label": "Поиск границ",
+      "purpose": "Увеличивать сложность, шум, историю, нагрузку или число шагов.",
+      "caveat": "Диапазон и остановка фиксируются; непроверенные области остаются неизвестными.",
+      "experiment_approval_required": true
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "interval_points",
+      "metric_context": "Качество и эффект",
+      "chart": "Точки с интервалами",
+      "caveat": "Общий набор кейсов, N и метод интервала."
+    },
+    {
+      "id": "cost_quality_scatter",
+      "metric_context": "Стоимость × качество",
+      "chart": "Диаграмма рассеяния",
+      "caveat": "Показывать компромисс и допустимые ограничения."
+    },
+    {
+      "id": "latency_distribution",
+      "metric_context": "Задержка",
+      "chart": "ECDF или распределение",
+      "caveat": "Одной p95 недостаточно для формы задержки."
+    },
+    {
+      "id": "degradation_curve",
+      "metric_context": "Усложнение условий",
+      "chart": "Кривые с интервалами",
+      "caveat": "Единицы осей; проверенный диапазон без экстраполяции."
+    },
+    {
+      "id": "confusion_matrix",
+      "metric_context": "Типы решений и ошибок",
+      "chart": "Матрица ошибок",
+      "caveat": "Счётчики и нормировка видны одновременно."
+    },
+    {
+      "id": "coverage_matrix",
+      "metric_context": "Покрытие и подтверждения",
+      "chart": "Матрица сценариев",
+      "caveat": "Отсутствие проверки отличается от нулевого качества."
+    },
+    {
+      "id": "resource_timeline",
+      "metric_context": "Расход ресурсов",
+      "chart": "Временной график",
+      "caveat": "Отмечать этапы, пики и метод измерения."
+    },
+    {
+      "id": "integration_profile",
+      "metric_context": "Внедрение",
+      "chart": "Профиль критериев и диапазоны",
+      "caveat": "Не сворачивать экспертные оценки в ложную точность."
+    }
+  ],
+  "mvp_packs": [
+    {
+      "id": "DecisionStructure",
+      "target_release": "private_mvp",
+      "implementation_status": "proposed",
+      "runnable_now": false,
+      "task_ids": [
+        "classification_routing",
+        "extraction_structuring"
+      ],
+      "object_family_ids": [
+        "foundation_models",
+        "decision_predictive_models",
+        "inference_reasoning"
+      ],
+      "constraints": [
+        "Текстовые задачи",
+        "Фиксированные схемы и критерии",
+        "Ограниченные provider adapters"
+      ]
+    },
+    {
+      "id": "MemoryRetrieval",
+      "target_release": "private_mvp",
+      "implementation_status": "proposed",
+      "runnable_now": false,
+      "task_ids": [
+        "retrieval_ranking",
+        "grounded_qa",
+        "memory_adaptation"
+      ],
+      "object_family_ids": [
+        "knowledge_memory",
+        "data_pipelines"
+      ],
+      "constraints": [
+        "Подготовленные реализации памяти",
+        "Зафиксированные корпуса и последовательности обновлений",
+        "Без произвольных сторонних пакетов"
+      ]
+    },
+    {
+      "id": "ToolUseRecovery",
+      "target_release": "private_mvp",
+      "implementation_status": "proposed",
+      "runnable_now": false,
+      "task_ids": [
+        "planning_tools",
+        "classification_routing"
+      ],
+      "object_family_ids": [
+        "agent_systems",
+        "tools_protocols"
+      ],
+      "constraints": [
+        "Разрешённые read-only или симулируемые инструменты",
+        "Ограниченные шаги и расходы",
+        "Без внешних записей по умолчанию"
+      ]
+    }
+  ],
+  "execution_support_states": [
+    "catalogued",
+    "method_planned",
+    "adapter_verified",
+    "runnable_with_constraints",
+    "unsupported"
+  ],
+  "measurement_contract": {
+    "required": [
+      "metric_id",
+      "metric_version",
+      "unit",
+      "direction",
+      "denominator_policy",
+      "scorer_version",
+      "sample_count",
+      "repeat_count",
+      "uncertainty_policy",
+      "evidence_refs"
+    ],
+    "missing_value_policy": "Отсутствует/неприменимо/ошибка отличаются от численного нуля.",
+    "universal_scalar_allowed": false
+  },
+  "extension_policy": {
+    "stable_ids": true,
+    "versioned_registry": true,
+    "deprecation_preserves_historical_refs": true,
+    "custom_namespace": "workspace.<id>.<category>",
+    "new_category_grants_execution": false,
+    "capability_admission": "Проверенный runner + scorer + данные + ресурсы + scope + Approval для оплачиваемого эксперимента."
+  }
+}

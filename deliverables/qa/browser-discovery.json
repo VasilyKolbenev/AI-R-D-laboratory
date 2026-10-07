@@ -1,0 +1,783 @@
+[
+  {
+    "name": "01-observatory.html",
+    "errors": [],
+    "desktop": {
+      "width": 1440,
+      "body": 1440,
+      "visibleDemo": true
+    },
+    "mobile": {
+      "width": 390,
+      "body": 390,
+      "visibleDemo": true
+    },
+    "controls": [
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Обзор",
+        "label": null,
+        "data": {
+          "nav": "overview"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Исследования03",
+        "label": null,
+        "data": {
+          "nav": "research"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Запуски01",
+        "label": null,
+        "data": {
+          "nav": "runs"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Знания03",
+        "label": null,
+        "data": {
+          "nav": "library"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "exportButton",
+        "text": "Экспорт данных",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "newRunButton",
+        "text": "＋ Новый эксперимент",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "tab-overview",
+        "text": "Результаты",
+        "label": null,
+        "data": {
+          "tab": "overview"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "tab-method",
+        "text": "Методика",
+        "label": null,
+        "data": {
+          "tab": "method"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "tab-evidence",
+        "text": "Артефакты",
+        "label": null,
+        "data": {
+          "tab": "evidence"
+        }
+      },
+      {
+        "tag": "INPUT",
+        "id": "compareToggle",
+        "text": "",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Context only",
+        "label": null,
+        "data": {
+          "candidate": "0"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Vector memory",
+        "label": null,
+        "data": {
+          "candidate": "1"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Event memory",
+        "label": null,
+        "data": {
+          "candidate": "2"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Context only",
+        "label": null,
+        "data": {
+          "candidate": "0"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Vector memory",
+        "label": null,
+        "data": {
+          "candidate": "1"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Event memory",
+        "label": null,
+        "data": {
+          "candidate": "2"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Детали запуска ↗",
+        "label": null,
+        "data": {
+          "open": "run"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Посмотреть план ↗",
+        "label": null,
+        "data": {
+          "open": "plan"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Подготовить повтор",
+        "label": null,
+        "data": {
+          "open": "plan"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "exportEvidence",
+        "text": "Скачать демо-набор JSON",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Открыть исследование ↗",
+        "label": null,
+        "data": {
+          "return": ""
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Посмотреть план ↗",
+        "label": null,
+        "data": {
+          "open": "plan"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Разобрать идею ↗",
+        "label": null,
+        "data": {
+          "open": "inbox"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Детали ↗",
+        "label": null,
+        "data": {
+          "open": "run"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Создать повтор",
+        "label": null,
+        "data": {
+          "open": "plan"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Сравнить кандидатов ↗",
+        "label": null,
+        "data": {
+          "return": ""
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Показать измерения ↗",
+        "label": null,
+        "data": {
+          "return": ""
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "План проверки ↗",
+        "label": null,
+        "data": {
+          "open": "plan"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "closeDrawer",
+        "text": "×",
+        "label": "Закрыть панель",
+        "data": {}
+      }
+    ]
+  },
+  {
+    "name": "02-atelier.html",
+    "errors": [],
+    "desktop": {
+      "width": 1440,
+      "body": 1440,
+      "visibleDemo": true
+    },
+    "mobile": {
+      "width": 390,
+      "body": 390,
+      "visibleDemo": true
+    },
+    "controls": [
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Исследования",
+        "label": null,
+        "data": {
+          "main": "research"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Запуски",
+        "label": null,
+        "data": {
+          "main": "runs"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "База знаний",
+        "label": null,
+        "data": {
+          "main": "knowledge"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "LAB / 001Долгая память агентаОтчёт готов",
+        "label": null,
+        "data": {
+          "study": "memory"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "LAB / 002Выбор инструментовПлан эксперимента",
+        "label": null,
+        "data": {
+          "study": "routing"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "LAB / 003Бюджет рассужденийГипотеза",
+        "label": null,
+        "data": {
+          "study": "reasoning"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "protocolButton",
+        "text": "Методика",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "repeatButton",
+        "text": "Повторить",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "tab-report",
+        "text": "Обзор",
+        "label": null,
+        "data": {
+          "view": "report"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "tab-compare",
+        "text": "Сравнение",
+        "label": null,
+        "data": {
+          "view": "compare"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "tab-evidence",
+        "text": "Доказательства",
+        "label": null,
+        "data": {
+          "view": "evidence"
+        }
+      },
+      {
+        "tag": "SELECT",
+        "id": "candidateSelect",
+        "text": "Event memoryVector memoryContext only",
+        "label": "Кандидат для сводки",
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Открыть доказательства ↗",
+        "label": null,
+        "data": {
+          "openView": "evidence"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "compareProtocol",
+        "text": "Посмотреть рецепт эксперимента →",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "closeDrawer",
+        "text": "×",
+        "label": "Закрыть панель",
+        "data": {}
+      }
+    ]
+  },
+  {
+    "name": "03-constellation.html",
+    "errors": [],
+    "desktop": {
+      "width": 1440,
+      "body": 1440,
+      "visibleDemo": true
+    },
+    "mobile": {
+      "width": 390,
+      "body": 390,
+      "visibleDemo": true
+    },
+    "controls": [
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Карта",
+        "label": null,
+        "data": {
+          "view": "map"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Эксперименты",
+        "label": null,
+        "data": {
+          "view": "experiments"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Сравнение",
+        "label": null,
+        "data": {
+          "view": "compare"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "export-button",
+        "text": "Экспорт данных",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "new-study",
+        "text": "Исследование",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "SELECT",
+        "id": "status-filter",
+        "text": "Все состоянияЕсть измеренияНе проверено",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Долгая память",
+        "label": null,
+        "data": {
+          "pick": "memory"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Поиск и RAG",
+        "label": null,
+        "data": {
+          "pick": "retrieval"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Рассуждение",
+        "label": null,
+        "data": {
+          "pick": "reasoning"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Мультимодальность",
+        "label": null,
+        "data": {
+          "pick": "multimodal"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Агентные системы",
+        "label": null,
+        "data": {
+          "pick": "agents"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Эффективность",
+        "label": null,
+        "data": {
+          "pick": "efficiency"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "coverage-info",
+        "text": "Что означают ячейки ↗",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "30",
+        "label": null,
+        "data": {
+          "cell": "Context only|Извлечение|30"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "30",
+        "label": null,
+        "data": {
+          "cell": "Context only|Обновление|30"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "30",
+        "label": null,
+        "data": {
+          "cell": "Context only|Конфликт|30"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "30",
+        "label": null,
+        "data": {
+          "cell": "Context only|Забывание|30"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "30",
+        "label": null,
+        "data": {
+          "cell": "Vector memory|Извлечение|30"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "30",
+        "label": null,
+        "data": {
+          "cell": "Vector memory|Обновление|30"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "30",
+        "label": null,
+        "data": {
+          "cell": "Vector memory|Конфликт|30"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "30",
+        "label": null,
+        "data": {
+          "cell": "Vector memory|Забывание|30"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "30",
+        "label": null,
+        "data": {
+          "cell": "Event memory|Извлечение|30"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "30",
+        "label": null,
+        "data": {
+          "cell": "Event memory|Обновление|30"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "30",
+        "label": null,
+        "data": {
+          "cell": "Event memory|Конфликт|30"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "30",
+        "label": null,
+        "data": {
+          "cell": "Event memory|Забывание|30"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "plan-test",
+        "text": "Посмотреть план",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "repeat-experiment",
+        "text": "Повторить демо",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "compare-export",
+        "text": "CSV",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "compare-recipe",
+        "text": "Открыть рецепт эксперимента",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "×",
+        "label": "Закрыть",
+        "data": {
+          "close": "study-dialog"
+        }
+      },
+      {
+        "tag": "INPUT",
+        "id": "study-name",
+        "text": "",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "SELECT",
+        "id": "study-area",
+        "text": "Долгая памятьПоиск и RAGРассуждениеМультимодальностьАгентные системыЭффективность",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Отмена",
+        "label": null,
+        "data": {
+          "close": "study-dialog"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Создать черновик",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "×",
+        "label": "Закрыть",
+        "data": {
+          "close": "plan-dialog"
+        }
+      },
+      {
+        "tag": "INPUT",
+        "id": "confirm-simulation",
+        "text": "",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Назад",
+        "label": null,
+        "data": {
+          "close": "plan-dialog"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "start-simulation",
+        "text": "Запустить демо",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "×",
+        "label": "Закрыть",
+        "data": {
+          "close": "simulation-dialog"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "stop-simulation",
+        "text": "Остановить",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "show-results",
+        "text": "Открыть сравнение",
+        "label": null,
+        "data": {}
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "×",
+        "label": "Закрыть",
+        "data": {
+          "close": "info-dialog"
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "id": "",
+        "text": "Понятно",
+        "label": null,
+        "data": {
+          "close": "info-dialog"
+        }
+      }
+    ]
+  }
+]

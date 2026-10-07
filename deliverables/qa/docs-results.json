@@ -1,0 +1,129 @@
+[
+  {
+    "file": "index.html",
+    "errors": [],
+    "desktop": {
+      "viewport": 1440,
+      "width": 1440,
+      "images": [
+        {
+          "src": "qa/01-desktop.png",
+          "loaded": true
+        },
+        {
+          "src": "qa/02-desktop.png",
+          "loaded": true
+        },
+        {
+          "src": "qa/03-desktop.png",
+          "loaded": true
+        }
+      ]
+    },
+    "mobile": {
+      "viewport": 390,
+      "width": 390
+    }
+  },
+  {
+    "file": "docs/architecture.html",
+    "errors": [],
+    "desktop": {
+      "viewport": 1440,
+      "width": 1440,
+      "images": [
+        {
+          "src": "../architecture/c1-context.svg",
+          "loaded": true
+        },
+        {
+          "src": "../architecture/c2-containers.svg",
+          "loaded": true
+        },
+        {
+          "src": "../architecture/c3-control.svg",
+          "loaded": true
+        },
+        {
+          "src": "../architecture/c3-execution.svg",
+          "loaded": true
+        },
+        {
+          "src": "../architecture/c4-contracts.svg",
+          "loaded": true
+        },
+        {
+          "src": "../architecture/dynamic-run.svg",
+          "loaded": true
+        },
+        {
+          "src": "../architecture/run-state.svg",
+          "loaded": true
+        },
+        {
+          "src": "../architecture/deployment.svg",
+          "loaded": true
+        }
+      ]
+    },
+    "mobile": {
+      "viewport": 390,
+      "width": 390
+    },
+    "dialogOpens": true,
+    "zoomWorks": true,
+    "escapeCloses": true
+  },
+  {
+    "file": "docs/implementation-plan.html",
+    "errors": [],
+    "desktop": {
+      "viewport": 1440,
+      "width": 1440,
+      "images": []
+    },
+    "mobile": {
+      "viewport": 390,
+      "width": 390
+    }
+  },
+  {
+    "file": "docs/research-catalog.html",
+    "errors": [],
+    "desktop": {
+      "viewport": 1440,
+      "width": 1440,
+      "images": []
+    },
+    "mobile": {
+      "viewport": 390,
+      "width": 390
+    }
+  },
+  {
+    "file": "qa/verification.html",
+    "errors": [],
+    "desktop": {
+      "viewport": 1440,
+      "width": 1440,
+      "images": [
+        {
+          "src": "01-desktop.png",
+          "loaded": true
+        },
+        {
+          "src": "02-desktop.png",
+          "loaded": true
+        },
+        {
+          "src": "03-desktop.png",
+          "loaded": true
+        }
+      ]
+    },
+    "mobile": {
+      "viewport": 390,
+      "width": 390
+    }
+  }
+]

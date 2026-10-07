@@ -1,0 +1,15 @@
+{
+  "html_pages": 11,
+  "local_references_checked": 183,
+  "json_files_parsed": 13,
+  "plan_schema_and_example_valid": true,
+  "errors": [],
+  "constellation_v2": {
+    "tested_revision_matches": true,
+    "all_checks_passed": true
+  },
+  "alpha_documents": {
+    "tested_revisions_match": true,
+    "all_checks_passed": true
+  }
+}

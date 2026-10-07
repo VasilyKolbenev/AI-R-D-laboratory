@@ -1,0 +1,22 @@
+digraph "c1-context" {
+graph [fontname="Segoe UI", bgcolor="#ffffff", pad="0.35", nodesep="0.4", ranksep="0.65", splines=polyline, labelloc="t", fontsize=22, fontcolor="#172435"];
+node [fontname="Segoe UI", shape=box, style="rounded,filled", fillcolor="#e9f0ff", color="#7696ce", fontcolor="#18385f", penwidth=1.2, fontsize=12, margin="0.2,0.16"];
+edge [fontname="Segoe UI", fontsize=10, fontcolor="#52647b", color="#9aacc2", arrowsize=0.65, penwidth=1.1];
+rankdir=LR;
+label="C4 L1 · Системный контекст";
+user [label="Исследователь / команда\n[Person]\nЗадаёт вопрос, утверждает план,\nчитает и сравнивает выводы"];
+lab [label="R&D Laboratory\n[Software System]\nОрганизует исследования,\nисполнение, измерения и evidence"];
+tg [label="Telegram\n[Software System]\nBot API\nПересланные материалы", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+sources [label="Публикации, код, данные\n[Software Systems]\nWeb / arXiv / GitHub / HF\nПервичные источники и версии", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+models [label="Провайдеры моделей\n[Software Systems]\nOpenAI / Anthropic / другие\nИсследователь, subject, judge", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+identity [label="Identity provider\n[Software System]\nOIDC / OAuth2\nВход и управление аккаунтами", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+compute [label="Внешние вычисления\n[Software System]\nGPU / isolated job service\nОпциональные resource profiles", fillcolor="#f0f2f5", color="#aab3c0", fontcolor="#475364"];
+user -> lab [label="Обсуждает, подтверждает,\nнаблюдает и повторяет"];
+user -> tg [label="Пересылает материалы"];
+tg -> lab [label="Доставляет сообщения\nи вложения"];
+lab -> sources [label="Читает и фиксирует\nверсии источников"];
+lab -> models [label="Запрашивает исследование,\nответы и оценивание"];
+lab -> identity [label="Проверяет идентичность"];
+lab -> compute [label="Запускает утверждённые jobs;\nполучает outputs"];
+
+}

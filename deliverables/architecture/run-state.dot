@@ -1,0 +1,43 @@
+digraph "run-state" {
+graph [fontname="Segoe UI", bgcolor="#ffffff", pad="0.35", nodesep="0.4", ranksep="0.65", splines=polyline, labelloc="t", fontsize=22, fontcolor="#172435"];
+node [fontname="Segoe UI", shape=box, style="rounded,filled", fillcolor="#e9f0ff", color="#7696ce", fontcolor="#18385f", penwidth=1.2, fontsize=12, margin="0.2,0.16"];
+edge [fontname="Segoe UI", fontsize=10, fontcolor="#52647b", color="#9aacc2", arrowsize=0.65, penwidth=1.1];
+rankdir=LR;
+label="Run lifecycle · Состояния и переходы";
+draft [label="DRAFT\n[State]\nПлан редактируется"];
+ready [label="AWAITING_APPROVAL\n[State]\nПакет и условия зафиксированы"];
+approved [label="APPROVED\n[State]\nHash + scope + budget"];
+queued [label="QUEUED\n[State]\nManifest проверен"];
+running [label="RUNNING\n[State]\nJobs / calls / heartbeats"];
+scoring [label="SCORING\n[State]\nRaw evidence сохранён"];
+completed [label="COMPLETED\n[State]\nReport + facts + lineage"];
+blocked [label="BLOCKED\n[State]\nНужен доступ или ресурс"];
+unknown [label="EXECUTION_UNKNOWN\n[State]\nНужна сверка job/request"];
+cancel [label="CANCEL_REQUESTED\n[State]\nНовые calls запрещены"];
+partial [label="PARTIAL\n[State]\nСохранён неполный результат"];
+cancelled [label="CANCELLED\n[State]\nПолучен receipt остановки"];
+failed [label="FAILED\n[State]\nНеустранимая ошибка"];
+draft -> ready [label="validate + freeze"];
+ready -> approved [label="human confirms exact hash"];
+approved -> queued [label="reserve / enqueue"];
+queued -> running [label="job receipt"];
+running -> scoring [label="all outputs collected"];
+scoring -> completed [label="metrics/report valid"];
+draft -> blocked [label="missing dependency"];
+queued -> blocked [label="resource unavailable"];
+blocked -> draft [label="resolve / replan"];
+running -> unknown [label="timeout after dispatch"];
+unknown -> running [label="reconcile: still active"];
+unknown -> scoring [label="reconcile: finished"];
+running -> cancel [label="user cancel / budget cap"];
+cancel -> cancelled [label="stop receipt, no usable result"];
+cancel -> partial [label="stop receipt, usable result"];
+running -> partial [label="declared partial finish"];
+scoring -> failed [label="invalid evidence"];
+running -> failed [label="fatal failure"];
+ready -> draft [label="change content → new version"];
+queued -> cancel [label="cancel request; preserve reconciliation"];
+scoring -> cancel [label="cancel request; preserve reconciliation"];
+unknown -> cancel [label="cancel request; preserve reconciliation"];
+
+}

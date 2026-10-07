@@ -1,0 +1,42 @@
+digraph "deployment" {
+graph [fontname="Segoe UI", bgcolor="#ffffff", pad="0.35", nodesep="0.4", ranksep="0.65", splines=polyline, labelloc="t", fontsize=22, fontcolor="#172435"];
+node [fontname="Segoe UI", shape=box, style="rounded,filled", fillcolor="#e9f0ff", color="#7696ce", fontcolor="#18385f", penwidth=1.2, fontsize=12, margin="0.2,0.16"];
+edge [fontname="Segoe UI", fontsize=10, fontcolor="#52647b", color="#9aacc2", arrowsize=0.65, penwidth=1.1];
+rankdir=TB;
+label="Deployment · Local private и Hosted beta";
+devuser [label="Разработчик / пользователь\n[Person]"];
+subgraph cluster_local {label="Private local · Windows + WSL2 / Linux VM";style="rounded,dashed";color="#8aa7d0";fontcolor="#566b86";fontsize=15;
+localui [label="UI + API\n[Container instances]\nNext / FastAPI\nlocalhost only"];
+localworkers [label="Workflow / Agent / Runner / Measurement\n[Container instances]\nPython / Node / Compose\nОбщий repo, разные процессы"];
+localstate [label="PostgreSQL + Temporal + Filesystem\n[Infrastructure]\nPersistent volumes\nPrivate dev storage"];
+localsandbox [label="Sandbox VM / isolated OCI runtime\n[Execution node]\nCPU profiles\nБез host mounts и DB access"];
+}
+devuser -> localui [label="Browser / localhost"];
+localui -> localworkers [label="Local authenticated API"];
+localworkers -> localstate [label="SQL / gRPC / artifact API"];
+localworkers -> localsandbox [label="Approved jobs"];
+subgraph cluster_hosted {label="Hosted beta · отдельное окружение";style="rounded,dashed";color="#8aa7d0";fontcolor="#566b86";fontsize=15;
+ingress [label="TLS ingress\n[Infrastructure]\nHTTPS\nPublic web / Telegram webhook"];
+apps [label="Web + API + Gateway\n[Container instances]\nControl network\nOIDC / secret references"];
+workers [label="Workflow / Agent / Measurement\n[Container instances]\nWorker network\nNo public inbound"];
+state [label="Managed PG + S3 + Temporal\n[Managed services]\nPrivate access / IAM\nBackup, PITR, retention"];
+secrets [label="IdP + secret manager + OTel\n[Managed services]\nOIDC / KMS / OTLP\nIdentity / credentials / telemetry"];
+subgraph cluster_exec {label="Dedicated execution hosts";style="rounded,dashed";color="#c39876";fontcolor="#566b86";fontsize=15;
+prod_runner [label="Runner coordinator\n[Container instance]\nScoped service identity\nLaunch / collect / cancel"];
+prod_sandbox [label="Sandbox pool\n[Execution nodes]\ngVisor / dedicated VM\nCPU limits / egress proxy"];
+gpu [label="GPU execution profile\n[Optional execution nodes]\nDedicated VM / job provider\nSpecial compatibility checks"];
+}
+}
+devuser -> ingress [label="Browser HTTPS (hosted)"];
+ingress -> apps [label="TLS / authenticated routes"];
+apps -> workers [label="Internal commands"];
+apps -> state [label="SQL / S3 / gRPC"];
+workers -> state [label="Task queue / artifacts"];
+apps -> secrets [label="JWT / scoped secret lookup"];
+workers -> prod_runner [label="Approved manifest"];
+prod_runner -> prod_sandbox [label="Job API"];
+prod_runner -> gpu [label="Opt-in GPU jobs"];
+prod_runner -> state [label="Artifacts / receipts"];
+prod_sandbox -> apps [label="Scoped gateway only"];
+
+}

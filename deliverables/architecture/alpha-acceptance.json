@@ -1,0 +1,2642 @@
+{
+  "schema_version": "1.0.0",
+  "document_type": "private_alpha_acceptance_matrix",
+  "title": "AI R&D Laboratory — критерии приёмки приватной альфы",
+  "created_on": "2026-10-07",
+  "language": "ru",
+  "scope_version": "private-alpha-1",
+  "scope_status": "implementation_baseline_to_verify_at_G0",
+  "schedule_context": {
+    "target_weeks": [
+      4,
+      5
+    ],
+    "target_is_commitment": false,
+    "note": "4–5 недель — целевой темп пользователя, не подтверждённый прогноз. Ускорение не меняет критерии приёмки; календарь и доступность разработчика сверяются отдельно.",
+    "requested_team": {
+      "product_owner": "User",
+      "technical_lead": "Codex",
+      "developer": "Claude"
+    },
+    "current_implementation_state": "prepared_design_and_interactive_synthetic_prototype",
+    "prototype_is_not_alpha_implementation": true
+  },
+  "source_documents": [
+    {
+      "id": "plan",
+      "path": "../docs/implementation-plan.html",
+      "scope_anchors": [
+        "scope",
+        "invariants",
+        "stages",
+        "packs",
+        "backlog",
+        "quality",
+        "cost",
+        "deployment",
+        "release"
+      ]
+    },
+    {
+      "id": "architecture",
+      "path": "../docs/architecture.html",
+      "scope_anchors": [
+        "principles",
+        "integrations",
+        "contracts",
+        "domain",
+        "approval",
+        "execution",
+        "metrics",
+        "comparisons",
+        "workflow",
+        "deployment"
+      ]
+    },
+    {
+      "id": "approved_ui",
+      "path": "../ui/03-constellation.html",
+      "role": "Согласованная концепция Constellation v2; синтетический HTML-прототип, не доказательство готовности API или альфы."
+    }
+  ],
+  "finite_scope": {
+    "audience": "Один владелец приватного workspace; изоляция модели данных проверяется дополнительной тестовой принадлежностью.",
+    "execution_packs": [
+      "DecisionStructure",
+      "MemoryRetrieval",
+      "ToolUseRecovery"
+    ],
+    "providers": [
+      "OpenAI native adapter",
+      "Anthropic native adapter"
+    ],
+    "source_inputs": [
+      "text",
+      "URL",
+      "file/PDF",
+      "manual Telegram forwards via bot getUpdates"
+    ],
+    "user_journey": [
+      "source",
+      "claim",
+      "hypothesis",
+      "plan",
+      "estimate",
+      "human_approval",
+      "run",
+      "report",
+      "compare",
+      "repeat",
+      "knowledge"
+    ],
+    "design": "Constellation v2",
+    "catalogue_vs_execution": "Широкий каталог хранит любые поддержанные категории исследований; исполняемые сценарии ограничены тремя пакетами и подтверждёнными capabilities. Недоступное исполнение остаётся анализом источников.",
+    "exposure": "Private deployment; публикация в интернет и приглашённая beta вне этой приёмки.",
+    "scope_change_policy": "Новые объекты или адаптеры не добавляются в знаменатель альфы молча: изменяются scope_version, оценка и матрица приёмки."
+  },
+  "acceptance_rules": {
+    "required_requirement_count": 57,
+    "initial_passed_count": 0,
+    "all_initial_statuses": "not_started",
+    "coverage_definition": "100% альфы означает прохождение всех 57 требований этой версии матрицы с воспроизводимыми доказательствами и закрытие G0–G7. Это не 100% будущего roadmap и не процент строк, покрытых unit-тестами.",
+    "prototype_policy": "Согласование дизайна и проверки HTML-прототипа не переводят требования рабочей альфы в passed.",
+    "allowed_requirement_statuses": [
+      "not_started",
+      "in_progress",
+      "ready_for_review",
+      "passed",
+      "failed",
+      "blocked"
+    ],
+    "allowed_verification_results": [
+      "not_run",
+      "pass",
+      "fail"
+    ],
+    "pass_rule": "Reviewer подтверждает acceptance_scenario; verification.result=pass, status=passed и непустой evidence со всеми ожидаемыми типами артефактов либо объяснённым эквивалентом. Доказательства относятся к принимаемой revision и среде.",
+    "gate_rule": "Gate закрывается только после pass всех его requirement_ids и dependency_gates; расписание не разрешает пропуск.",
+    "evidence_minimum_fields": [
+      "artifact_path_or_uri",
+      "revision",
+      "environment",
+      "executed_at",
+      "reproduce_command_or_manual_protocol",
+      "result",
+      "known_limitations"
+    ],
+    "developer_claim_is_not_evidence": true,
+    "separate_review_required_for": [
+      "approval/hash/scope",
+      "budget ledger/unknown",
+      "authorization/isolation",
+      "measurement methodology"
+    ],
+    "release_condition": "Все release_blocking требования passed, gates G0–G7 passed, блокирующие дефекты закрыты, приватная установка и восстановление проверены.",
+    "paid_execution": "Разработка и fake-provider проверки не означают согласия на расходы лаборатории. Live pilot запускается только с отдельно подтверждёнными планом и бюджетом; отсутствие ключей/разрешения оставляет G7 незакрытым.",
+    "no_quality_tradeoff_for_schedule": true
+  },
+  "gates": [
+    {
+      "id": "G0",
+      "title": "Проверка осуществимости",
+      "status": "not_started",
+      "dependency_gates": [],
+      "requirement_ids": [
+        "ALPHA-001",
+        "ALPHA-002",
+        "ALPHA-003",
+        "ALPHA-004"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "G1",
+      "title": "Основа продукта",
+      "status": "not_started",
+      "dependency_gates": [
+        "G0"
+      ],
+      "requirement_ids": [
+        "ALPHA-005",
+        "ALPHA-006",
+        "ALPHA-007",
+        "ALPHA-008",
+        "ALPHA-009",
+        "ALPHA-010",
+        "ALPHA-011"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "G2",
+      "title": "Источники и исследователь",
+      "status": "not_started",
+      "dependency_gates": [
+        "G1"
+      ],
+      "requirement_ids": [
+        "ALPHA-012",
+        "ALPHA-013",
+        "ALPHA-014",
+        "ALPHA-015",
+        "ALPHA-016",
+        "ALPHA-017"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "G3",
+      "title": "Согласование, Gateway и бюджет",
+      "status": "not_started",
+      "dependency_gates": [
+        "G1",
+        "G2"
+      ],
+      "requirement_ids": [
+        "ALPHA-018",
+        "ALPHA-019",
+        "ALPHA-020",
+        "ALPHA-021",
+        "ALPHA-022",
+        "ALPHA-023",
+        "ALPHA-024",
+        "ALPHA-025",
+        "ALPHA-026"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "G4",
+      "title": "Исполнение и восстановление",
+      "status": "not_started",
+      "dependency_gates": [
+        "G3"
+      ],
+      "requirement_ids": [
+        "ALPHA-027",
+        "ALPHA-028",
+        "ALPHA-029",
+        "ALPHA-030",
+        "ALPHA-031",
+        "ALPHA-032",
+        "ALPHA-033",
+        "ALPHA-034",
+        "ALPHA-035",
+        "ALPHA-036",
+        "ALPHA-037"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "G5",
+      "title": "Измерения и отчёты",
+      "status": "not_started",
+      "dependency_gates": [
+        "G4"
+      ],
+      "requirement_ids": [
+        "ALPHA-038",
+        "ALPHA-039",
+        "ALPHA-040",
+        "ALPHA-041",
+        "ALPHA-042",
+        "ALPHA-043",
+        "ALPHA-044",
+        "ALPHA-045",
+        "ALPHA-046"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "G6",
+      "title": "Продуктовый UX",
+      "status": "not_started",
+      "dependency_gates": [
+        "G5"
+      ],
+      "requirement_ids": [
+        "ALPHA-047",
+        "ALPHA-048",
+        "ALPHA-049",
+        "ALPHA-050",
+        "ALPHA-051"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "G7",
+      "title": "Интеграционный пилот и приватная поставка",
+      "status": "not_started",
+      "dependency_gates": [
+        "G2",
+        "G3",
+        "G4",
+        "G5",
+        "G6"
+      ],
+      "requirement_ids": [
+        "ALPHA-052",
+        "ALPHA-053",
+        "ALPHA-054",
+        "ALPHA-055",
+        "ALPHA-056",
+        "ALPHA-057"
+      ],
+      "evidence": []
+    }
+  ],
+  "requirements": [
+    {
+      "id": "ALPHA-001",
+      "key": "scope",
+      "title": "Зафиксированы границы приватной альфы",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G0",
+      "modules": [
+        "Product",
+        "ProtocolRegistry"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [],
+      "acceptance_scenario": "Владелец и техлид сверяют один сквозной сценарий, три исполняемых пакета и список исключений; каталог не представляется поддержкой исполнения любой технологии.",
+      "verification": {
+        "kinds": [
+          "document_review"
+        ],
+        "expected_evidence": [
+          "Утверждённый alpha scope с версией",
+          "Три спецификации пакетов и список capabilities"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#scope",
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#packs",
+        "../docs/implementation-plan.html#backlog"
+      ]
+    },
+    {
+      "id": "ALPHA-002",
+      "key": "provider_spike",
+      "title": "Проверены возможности провайдеров и управляемость расходов",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G0",
+      "modules": [
+        "ModelGateway",
+        "ProviderAdapters"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-001"
+      ],
+      "acceptance_scenario": "Детерминированные ответы и fault injection показывают полный маршрут вызова через Gateway, usage и исход при разрыве после отправки. Неподконтрольный агентный SDK не допускается к платному эксперименту.",
+      "verification": {
+        "kinds": [
+          "contract_test",
+          "fault_injection"
+        ],
+        "expected_evidence": [
+          "Матрица OpenAI/Anthropic capabilities с подтверждёнными и неподтверждёнными полями",
+          "Протокол spike: usage, cancellation, timeout, скрытые дочерние вызовы"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#integrations",
+        "../docs/architecture.html#decisions"
+      ]
+    },
+    {
+      "id": "ALPHA-003",
+      "key": "trust_spike",
+      "title": "Подтверждена граница изолированного исполнения",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G0",
+      "modules": [
+        "RunnerCoordinator",
+        "Sandbox",
+        "ToolBroker"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-001"
+      ],
+      "acceptance_scenario": "В выбранной Windows/WSL2/Linux-конфигурации выполняется отрицательная проба доступа к host и управляющей сети; выбор sandbox/VM и ограничений зафиксирован без скрытой зависимости от GPU.",
+      "verification": {
+        "kinds": [
+          "security_test",
+          "document_review"
+        ],
+        "expected_evidence": [
+          "Threat model",
+          "ADR sandbox/runtime с результатами проб и ограничениями"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#deployment",
+        "../docs/architecture.html#execution"
+      ]
+    },
+    {
+      "id": "ALPHA-004",
+      "key": "contracts",
+      "title": "Согласованы контракты и состояния исследования",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G0",
+      "modules": [
+        "ControlAPI",
+        "ProtocolRegistry",
+        "RunRegistryOutbox"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-001"
+      ],
+      "acceptance_scenario": "Один валидный план проходит схему и семантические правила; описаны состояния плана, запуска и финансового учёта, включая partial и unknown, а также стабильные идентификаторы попыток.",
+      "verification": {
+        "kinds": [
+          "schema_test",
+          "document_review"
+        ],
+        "expected_evidence": [
+          "Версионированные PlanVersion, Approval, AttemptEnvelope и domain state contracts",
+          "ADR ключевых решений"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#contracts",
+        "../docs/architecture.html#workflow"
+      ]
+    },
+    {
+      "id": "ALPHA-005",
+      "key": "foundation",
+      "title": "Воспроизводимый стенд и CI",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G1",
+      "modules": [
+        "Web",
+        "ControlAPI",
+        "WorkflowWorker",
+        "PostgreSQL",
+        "ObjectStore"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-004",
+        "ALPHA-003"
+      ],
+      "acceptance_scenario": "Из чистой рабочей копии поднимаются web, API, БД, object store, Temporal и fake-provider; выполняются миграции и health checks, контракты API согласованы с клиентом.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "build_check"
+        ],
+        "expected_evidence": [
+          "Lockfiles и container digests",
+          "CI result, OpenAPI и инструкция запуска",
+          "Раздельные runtime identities"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stack",
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#deployment"
+      ]
+    },
+    {
+      "id": "ALPHA-006",
+      "key": "identity",
+      "title": "Проверены вход и серверные полномочия",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G1",
+      "modules": [
+        "IdentityPolicy",
+        "ControlAPI"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-005"
+      ],
+      "acceptance_scenario": "Аутентифицированный владелец входит и создаёт исследование; неаутентифицированный запрос к данным и сервисная попытка выдать человеческое согласование отклоняются. Local/private профиль не открывает анонимный публичный API.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "security_test"
+        ],
+        "expected_evidence": [
+          "Проверки OIDC/выбранного private deployment identity profile",
+          "Матрица ролей и audit records команд"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#components",
+        "../docs/architecture.html#deployment"
+      ]
+    },
+    {
+      "id": "ALPHA-007",
+      "key": "workspace_isolation",
+      "title": "Данные разделены по workspace",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G1",
+      "modules": [
+        "IdentityPolicy",
+        "PostgreSQL",
+        "ObjectStore"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-006"
+      ],
+      "acceptance_scenario": "Две тестовые принадлежности workspace не позволяют прочитать или изменить чужие источники, планы, запуски и объекты даже по известному ID; tenant context не протекает через connection pool.",
+      "verification": {
+        "kinds": [
+          "security_test",
+          "integration_test"
+        ],
+        "expected_evidence": [
+          "Негативные тесты API/object access/RLS",
+          "Проверка runtime role без обхода RLS и транзакционного tenant context"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#deployment"
+      ]
+    },
+    {
+      "id": "ALPHA-008",
+      "key": "domain_persistence",
+      "title": "Сущности и история сохраняются после перезапуска",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G1",
+      "modules": [
+        "ControlAPI",
+        "ProtocolRegistry",
+        "RunRegistryOutbox",
+        "PostgreSQL"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-006",
+        "ALPHA-007"
+      ],
+      "acceptance_scenario": "Пользователь создаёт источник, исследование и план, затем перезапускает сервисы; сущности, версии, принадлежность и audit доступны с прежними ID.",
+      "verification": {
+        "kinds": [
+          "integration_test"
+        ],
+        "expected_evidence": [
+          "Migration test и restart test",
+          "Записи workspace/user/source/research/plan/run/artifact"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#domain"
+      ]
+    },
+    {
+      "id": "ALPHA-009",
+      "key": "artifacts",
+      "title": "Артефакты проверяются и выдаются по правам",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G1",
+      "modules": [
+        "ObjectStore",
+        "ControlAPI",
+        "IdentityPolicy"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-007"
+      ],
+      "acceptance_scenario": "Загрузка проходит карантин, лимиты типа/размера и проверку хеша; некорректный объект не продвигается в evidence. Ссылка ограничена TTL; сценарий немедленного отзыва использует авторизованный download proxy.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "security_test"
+        ],
+        "expected_evidence": [
+          "Artifact manifest с hashes",
+          "Тесты quarantine/promotion/TTL/proxy permissions"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#domain",
+        "../docs/architecture.html#deployment"
+      ]
+    },
+    {
+      "id": "ALPHA-010",
+      "key": "backup_foundation",
+      "title": "Создан проверяемый backup БД и объектов",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G1",
+      "modules": [
+        "PostgreSQL",
+        "ObjectStore",
+        "Operations"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-008",
+        "ALPHA-009"
+      ],
+      "acceptance_scenario": "Минимальное исследование восстанавливается из согласованной копии метаданных и объектов в чистую среду; hashes и ссылки не нарушены.",
+      "verification": {
+        "kinds": [
+          "restore_drill"
+        ],
+        "expected_evidence": [
+          "Ранний restore report с командами, окружением и hashes",
+          "Runbook backup/restore"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#deployment"
+      ]
+    },
+    {
+      "id": "ALPHA-011",
+      "key": "telemetry",
+      "title": "Трассировка сохраняет связь событий без утечки содержимого",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G1",
+      "modules": [
+        "ControlAPI",
+        "WorkflowWorker",
+        "ModelGateway",
+        "Operations"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-005"
+      ],
+      "acceptance_scenario": "Команда проходит через несколько процессов с correlation IDs; ключ, приватный source span и полный ответ модели не появляются в operational logs по умолчанию.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "security_test"
+        ],
+        "expected_evidence": [
+          "OTel trace и safe log sample",
+          "Тест редактирования секретов/PII и политика logging"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stack",
+        "../docs/implementation-plan.html#deployment",
+        "../docs/architecture.html#deployment"
+      ]
+    },
+    {
+      "id": "ALPHA-012",
+      "key": "source_import",
+      "title": "Импортируются текст, URL и файлы с безопасным извлечением",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G2",
+      "modules": [
+        "SourceClaimCatalog",
+        "IngestActivity",
+        "ParserSandbox"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-009",
+        "ALPHA-008"
+      ],
+      "acceptance_scenario": "Текст, web URL и PDF приводят к сохранённому оригиналу и версионированному извлечению. SSRF через redirect/DNS, чрезмерный размер и неподдерживаемый тип отклоняются; импорт не исполняет присланный код.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "security_test"
+        ],
+        "expected_evidence": [
+          "Фикстуры трёх форматов и результаты parsing",
+          "Негативные тесты схем/адресов/размеров/таймаутов"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#integrations",
+        "../docs/architecture.html#execution"
+      ]
+    },
+    {
+      "id": "ALPHA-013",
+      "key": "telegram",
+      "title": "Telegram-пересылки надёжно принимаются в private режиме",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G2",
+      "modules": [
+        "TelegramConnector",
+        "IngestActivity",
+        "SourceClaimCatalog"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-012",
+        "ALPHA-006"
+      ],
+      "acceptance_scenario": "Чат привязан одноразовым кодом; getUpdates принимает пересланный текст/ссылку/файл, повтор update_id не дублирует материал. После сбоя обработка продолжается с сохранённого offset после надёжной постановки события.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "fault_injection"
+        ],
+        "expected_evidence": [
+          "Polling fixture replay и restart report",
+          "Проверка chat binding, deduplication и доступных атрибутов происхождения"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#stack",
+        "../docs/architecture.html#integrations"
+      ]
+    },
+    {
+      "id": "ALPHA-014",
+      "key": "provenance",
+      "title": "Исходник, извлечение и заявления автора разделены",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G2",
+      "modules": [
+        "SourceClaimCatalog",
+        "EvidenceReportQueries"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-012"
+      ],
+      "acceptance_scenario": "Из карточки claim открывается точная версия источника и фрагмент с координатами; обновление публикации создаёт snapshot/extraction version. Внешнее заявление не выдаётся за измерение лаборатории.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "user_acceptance"
+        ],
+        "expected_evidence": [
+          "SourceSnapshot→ExtractionVersion→Claim examples",
+          "Проверки span references и evidence type"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#domain"
+      ]
+    },
+    {
+      "id": "ALPHA-015",
+      "key": "catalog",
+      "title": "Каталог и связи сохраняют происхождение технологий",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G2",
+      "modules": [
+        "SourceClaimCatalog",
+        "EvidenceReportQueries"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-014"
+      ],
+      "acceptance_scenario": "Две публикации одной технологии связываются без потери источников; карточка допускает несколько категорий/задач/модальностей. Неподдерживаемое исполнение остаётся доступным для анализа источников.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "user_acceptance"
+        ],
+        "expected_evidence": [
+          "Каталог категорий и capabilities",
+          "Пример связей/deduplication и статуса source analysis"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#scope",
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#principles"
+      ]
+    },
+    {
+      "id": "ALPHA-016",
+      "key": "researcher",
+      "title": "Исследователь выдаёт структурированный проверяемый план",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G2",
+      "modules": [
+        "AgentRuntime",
+        "PlanningActivity",
+        "ToolBroker",
+        "ProtocolRegistry"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-002",
+        "ALPHA-004",
+        "ALPHA-014"
+      ],
+      "acceptance_scenario": "Researcher формирует вопрос, гипотезу, baseline, ограничения и рецепт из трёх форматов источников. Инструкция внутри статьи не повышает его права, запрос запрещённого инструмента блокируется сервером.",
+      "verification": {
+        "kinds": [
+          "contract_test",
+          "security_test",
+          "user_acceptance"
+        ],
+        "expected_evidence": [
+          "Structured output fixtures",
+          "Prompt injection и scoped tool tests",
+          "Черновые планы со ссылками на claims"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#components",
+        "../docs/architecture.html#execution"
+      ]
+    },
+    {
+      "id": "ALPHA-017",
+      "key": "source_unknowns",
+      "title": "Недоступность и неполнота источника видимы",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G2",
+      "modules": [
+        "SourceClaimCatalog",
+        "AgentRuntime",
+        "Web"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-013",
+        "ALPHA-016"
+      ],
+      "acceptance_scenario": "Недоступный оригинал Telegram, отсутствующий код и неполный PDF явно помечены; отчёт использует только полученное содержимое и не заявляет чтение закрытой истории или воспроизведение.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "user_acceptance"
+        ],
+        "expected_evidence": [
+          "Фикстуры unavailable/partial extraction",
+          "UI и отчёт с ограничениями источника"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#risks",
+        "../docs/architecture.html#integrations"
+      ]
+    },
+    {
+      "id": "ALPHA-018",
+      "key": "frozen_plan",
+      "title": "Версия плана и исполняемые артефакты неизменяемы",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G3",
+      "modules": [
+        "ProtocolRegistry",
+        "ApprovalService"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-004",
+        "ALPHA-009",
+        "ALPHA-016"
+      ],
+      "acceptance_scenario": "Перед подтверждающим запуском фиксируются dataset/split, protocol, prompts/code, dependencies, candidate configs, scorer, runner/image и budget. Любое существенное изменение создаёт новую версию и серверный canonical hash.",
+      "verification": {
+        "kinds": [
+          "domain_test",
+          "integration_test"
+        ],
+        "expected_evidence": [
+          "Golden canonicalization/hash tests",
+          "Frozen manifest и тесты version invalidation"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#invariants",
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#approval"
+      ]
+    },
+    {
+      "id": "ALPHA-019",
+      "key": "plan_validation",
+      "title": "Семантический валидатор не пропускает противоречивый план",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G3",
+      "modules": [
+        "ProtocolRegistry",
+        "ControlAPI"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-018"
+      ],
+      "acceptance_scenario": "Проверяются ссылки, уникальные candidate IDs, одна primary metric, максимум attempts/provider calls, порядок оценок и лимит. Сравнительный протокол требует baseline и ≥2 candidates; одиночное воспроизведение допустимо.",
+      "verification": {
+        "kinds": [
+          "domain_test",
+          "schema_test"
+        ],
+        "expected_evidence": [
+          "Положительные/отрицательные schema и semantic fixtures",
+          "Проверки unsupported capabilities до запуска"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/architecture.html#contracts",
+        "../docs/implementation-plan.html#packs"
+      ]
+    },
+    {
+      "id": "ALPHA-020",
+      "key": "approval",
+      "title": "Согласование выдаётся человеком для точной версии и области",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G3",
+      "modules": [
+        "ApprovalService",
+        "IdentityPolicy",
+        "RunRegistryOutbox"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-019",
+        "ALPHA-006"
+      ],
+      "acceptance_scenario": "Self-approval, иной workspace/пользователь/hash, истёкшее или отозванное разрешение не дают dispatch. Проверяются scope, валюта, лимит, expiry и число запусков; approve и launch — разные команды.",
+      "verification": {
+        "kinds": [
+          "security_test",
+          "domain_test",
+          "integration_test"
+        ],
+        "expected_evidence": [
+          "Replay/expiry/revocation/cross-workspace tests",
+          "Approval audit с plan hash и identity"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#invariants",
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#quality",
+        "../docs/architecture.html#approval"
+      ]
+    },
+    {
+      "id": "ALPHA-021",
+      "key": "provider_roles",
+      "title": "OpenAI и Anthropic работают через раздельные роли",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G3",
+      "modules": [
+        "ModelGateway",
+        "ProviderAdapters",
+        "AgentRuntime"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-002",
+        "ALPHA-019"
+      ],
+      "acceptance_scenario": "Оба нативных адаптера проходят единый conformance набор для поддерживаемых roles/capabilities/usage/errors/streaming/tool calls; researcher, subject и judge настраиваются отдельно, requested/resolved/actual model IDs сохраняются, fallback не скрывается.",
+      "verification": {
+        "kinds": [
+          "contract_test",
+          "integration_test"
+        ],
+        "expected_evidence": [
+          "Conformance reports двух адаптеров",
+          "Provider envelope с raw и normalized usage, request ID и версией адаптера"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#integrations",
+        "../docs/architecture.html#contracts"
+      ]
+    },
+    {
+      "id": "ALPHA-022",
+      "key": "cost_estimation",
+      "title": "Прогноз расходов прозрачен и версионирован",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G3",
+      "modules": [
+        "ModelGateway",
+        "BudgetLedger",
+        "Web"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-021",
+        "ALPHA-018"
+      ],
+      "acceptance_scenario": "До approval показаны диапазон, потолок, допущения и snapshot rate card. Учтены применимые candidate/judge/tools/compute/storage расходы; неизвестный тариф не превращается в ноль, пилот имеет отдельный план.",
+      "verification": {
+        "kinds": [
+          "domain_test",
+          "integration_test",
+          "user_acceptance"
+        ],
+        "expected_evidence": [
+          "Расчётные fixtures с единицами/валютой/датой/источником тарифа",
+          "Estimate UI и самостоятельный pilot manifest"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#cost",
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#approval"
+      ]
+    },
+    {
+      "id": "ALPHA-023",
+      "key": "atomic_budget",
+      "title": "Ledger атомарно ограничивает каждый платный вызов",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G3",
+      "modules": [
+        "BudgetLedger",
+        "ModelGateway",
+        "PostgreSQL"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-020",
+        "ALPHA-022"
+      ],
+      "acceptance_scenario": "Конкурирующие вызовы не резервируют один остаток дважды; до отправки резервируется верхняя оценка, после usage выполняется settlement/release. История ledger дополняется и не переписывается.",
+      "verification": {
+        "kinds": [
+          "concurrency_test",
+          "domain_test",
+          "fault_injection"
+        ],
+        "expected_evidence": [
+          "Параллельный reservation test",
+          "Ledger invariant report и трасса reserve→settle/release"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#quality",
+        "../docs/implementation-plan.html#cost",
+        "../docs/architecture.html#approval"
+      ]
+    },
+    {
+      "id": "ALPHA-024",
+      "key": "unknown_cost",
+      "title": "Неизвестный внешний эффект сохраняет финансовую ответственность",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G3",
+      "modules": [
+        "BudgetLedger",
+        "ModelGateway",
+        "Reconciler"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-023"
+      ],
+      "acceptance_scenario": "Таймаут после возможной отправки атомарно переводит сумму из reserved в unknown exposure без двойного вычета. Нет слепого платного повтора; reconciler либо доказанная идемпотентность/ручное решение закрывают исход с причиной.",
+      "verification": {
+        "kinds": [
+          "fault_injection",
+          "domain_test"
+        ],
+        "expected_evidence": [
+          "Timeout-before/after-send fixtures",
+          "Reconciliation queue и audit корректировок",
+          "Проверка взаимного исключения settled/reserved/unknown"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#quality",
+        "../docs/implementation-plan.html#cost",
+        "../docs/architecture.html#approval",
+        "../docs/architecture.html#workflow"
+      ]
+    },
+    {
+      "id": "ALPHA-025",
+      "key": "discovery_budget",
+      "title": "Планирование и SDK не обходят собственный лимит",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G3",
+      "modules": [
+        "AgentRuntime",
+        "ToolBroker",
+        "ModelGateway",
+        "BudgetLedger"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-023",
+        "ALPHA-016"
+      ],
+      "acceptance_scenario": "Discovery расходуется только в отдельном согласованном scope/лимите; дочерние вызовы исследователя учтены. Платный пилот и основной запуск требуют собственного approval; неограниченно тарифицируемый профиль не объявляется hard-cap.",
+      "verification": {
+        "kinds": [
+          "security_test",
+          "integration_test"
+        ],
+        "expected_evidence": [
+          "Discovery ledger с role allocation",
+          "Пробы hidden SDK calls и отказ неподконтрольного профиля"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#invariants",
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#integrations",
+        "../docs/architecture.html#approval"
+      ]
+    },
+    {
+      "id": "ALPHA-026",
+      "key": "secret_boundary",
+      "title": "Ключи и вызовы защищены границей Gateway",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G3",
+      "modules": [
+        "ModelGateway",
+        "SecretStore",
+        "ToolBroker",
+        "Sandbox"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-021",
+        "ALPHA-006",
+        "ALPHA-003"
+      ],
+      "acceptance_scenario": "Браузер, исследовательский shell и candidate sandbox не получают provider keys или прямой обход Gateway; короткие scoped grants ограничены run/attempt/инструментами. Маскированные сведения доступны UI.",
+      "verification": {
+        "kinds": [
+          "security_test",
+          "integration_test"
+        ],
+        "expected_evidence": [
+          "Secrets leakage и egress bypass tests",
+          "Проверка scoped grants/expiry и безопасных API responses"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stack",
+        "../docs/architecture.html#integrations",
+        "../docs/architecture.html#execution"
+      ]
+    },
+    {
+      "id": "ALPHA-027",
+      "key": "outbox",
+      "title": "Запуск и outbox создаются одной транзакцией",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G4",
+      "modules": [
+        "RunRegistryOutbox",
+        "OutboxDispatcher",
+        "Temporal"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-020",
+        "ALPHA-023",
+        "ALPHA-005"
+      ],
+      "acceptance_scenario": "Двойной клик и redelivery возвращают тот же Run по idempotency key; сбой между commit и доставкой не теряет событие. Стабильный workflow ID предотвращает второй запуск.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "fault_injection"
+        ],
+        "expected_evidence": [
+          "Transactional outbox/replay tests",
+          "Correlation chain command→run→outbox→workflow"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#quality",
+        "../docs/architecture.html#components",
+        "../docs/architecture.html#workflow"
+      ]
+    },
+    {
+      "id": "ALPHA-028",
+      "key": "workflow",
+      "title": "Долгий workflow имеет явные состояния и восстановление",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G4",
+      "modules": [
+        "ResearchWorkflow",
+        "RunWorkflow",
+        "Reconciler"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-027"
+      ],
+      "acceptance_scenario": "Prepare→execute→measure→report использует детерминированный workflow и Activities для внешних эффектов. После рестарта worker процесс продолжается; read model показывает задержку проекции и сверяется по IDs.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "fault_injection"
+        ],
+        "expected_evidence": [
+          "Temporal replay/restart report",
+          "Проверки state transitions и доменной projection reconciliation"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#workflow"
+      ]
+    },
+    {
+      "id": "ALPHA-029",
+      "key": "runner_contract",
+      "title": "Inspect и generic runner выдают единый результат исполнения",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G4",
+      "modules": [
+        "RunnerCoordinator",
+        "InspectAdapter",
+        "GenericRunner",
+        "Collector"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-028",
+        "ALPHA-026"
+      ],
+      "acceptance_scenario": "Оба адаптера проходят validate/submit/poll/collect/cancel conformance на ограниченной задаче; AttemptEnvelope и artifact manifest содержат исходы, timings, ресурсы, IDs и hashes.",
+      "verification": {
+        "kinds": [
+          "contract_test",
+          "integration_test"
+        ],
+        "expected_evidence": [
+          "Conformance reports Inspect/generic",
+          "AttemptEnvelope schema fixtures и artifact manifests"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#contracts"
+      ]
+    },
+    {
+      "id": "ALPHA-030",
+      "key": "sandbox",
+      "title": "Недоверенное исполнение ограничено и изолировано",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G4",
+      "modules": [
+        "RunnerCoordinator",
+        "ExecutionSandbox",
+        "GatewayProxy"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-029",
+        "ALPHA-003"
+      ],
+      "acceptance_scenario": "Попытки доступа к host/socket/home/cloud metadata/control DB/чужим объектам/запрещённой сети блокируются; read-only root, ephemeral workspace и лимиты времени/CPU/RAM/PIDs/диска/output применены.",
+      "verification": {
+        "kinds": [
+          "security_test",
+          "fault_injection"
+        ],
+        "expected_evidence": [
+          "Негативный sandbox suite",
+          "Image digests и runtime policy",
+          "Проверка cleanup и ограниченной фазы dependencies"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#quality",
+        "../docs/architecture.html#execution"
+      ]
+    },
+    {
+      "id": "ALPHA-031",
+      "key": "scorer_separation",
+      "title": "Оценщик отделён от кандидата и доверенного worker",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G4",
+      "modules": [
+        "EvaluationSandbox",
+        "Collector",
+        "MeasurementWorker",
+        "IdentityPolicy"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-030",
+        "ALPHA-009"
+      ],
+      "acceptance_scenario": "Сгенерированный scorer выполняется только в отдельной evaluation sandbox с узким gold grant. Candidate и researcher не читают held-out targets, а trusted Measurement worker не импортирует произвольный package; collector валидирует typed output и attempt IDs.",
+      "verification": {
+        "kinds": [
+          "security_test",
+          "contract_test"
+        ],
+        "expected_evidence": [
+          "Gold access negative tests",
+          "Scorer output validation suite",
+          "Проверка trusted scorer allowlist и sandbox network policy"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#execution",
+        "../docs/architecture.html#metrics"
+      ]
+    },
+    {
+      "id": "ALPHA-032",
+      "key": "pack_decision",
+      "title": "Исполняется пакет DecisionStructure",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G4",
+      "modules": [
+        "ProtocolRegistry",
+        "RunnerCoordinator",
+        "Scorer",
+        "MetricRegistry"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-029",
+        "ALPHA-031"
+      ],
+      "acceptance_scenario": "Versioned пакет выполняет classification/routing/schema extraction/refusal с baseline, noise/rare/ambiguous/unknown cases; сохраняет accuracy, macro F1, schema validity и цену ошибок; calibration применяется только при доступных вероятностях.",
+      "verification": {
+        "kinds": [
+          "golden_fixture_test",
+          "integration_test"
+        ],
+        "expected_evidence": [
+          "Manifest, builder, baseline, solver, scorer, metric definitions и fixtures пакета",
+          "Протокол применимости/ограничений и сохранённый run"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#packs",
+        "../docs/implementation-plan.html#stages"
+      ]
+    },
+    {
+      "id": "ALPHA-033",
+      "key": "pack_memory",
+      "title": "Исполняется пакет MemoryRetrieval",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G4",
+      "modules": [
+        "ProtocolRegistry",
+        "RunnerCoordinator",
+        "Scorer",
+        "MetricRegistry"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-029",
+        "ALPHA-031"
+      ],
+      "acceptance_scenario": "Versioned пакет сравнивает baseline с памятью/поиском на retrieval/update/contradiction/stale/deletion сценариях и изменении длины/шума; измеряет recall@k, nDCG, актуальность, stale rate, deletion correctness, задержку и цену.",
+      "verification": {
+        "kinds": [
+          "golden_fixture_test",
+          "integration_test"
+        ],
+        "expected_evidence": [
+          "Manifest, builder, baseline, solver, scorer, metric definitions и fixtures пакета",
+          "Протокол применимости/ограничений и сохранённый run"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#packs",
+        "../docs/implementation-plan.html#stages"
+      ]
+    },
+    {
+      "id": "ALPHA-034",
+      "key": "pack_tools",
+      "title": "Исполняется пакет ToolUseRecovery",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G4",
+      "modules": [
+        "ProtocolRegistry",
+        "RunnerCoordinator",
+        "ToolBroker",
+        "Scorer"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-029",
+        "ALPHA-031"
+      ],
+      "acceptance_scenario": "Versioned пакет проходит ограниченный процесс и сбои 429/unavailable/partial/contradictory/timeout на simulator или read-only endpoints; считает success, лишние вызовы, вмешательства, recovery, шаги и полную цену.",
+      "verification": {
+        "kinds": [
+          "golden_fixture_test",
+          "integration_test",
+          "fault_injection"
+        ],
+        "expected_evidence": [
+          "Manifest, builder, baseline, solver, scorer, metric definitions и fixtures пакета",
+          "Протокол применимости/ограничений и сохранённый run"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#packs",
+        "../docs/architecture.html#execution"
+      ]
+    },
+    {
+      "id": "ALPHA-035",
+      "key": "attempt_history",
+      "title": "Каждая попытка и ошибка сохраняются без двойной записи",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G4",
+      "modules": [
+        "Collector",
+        "RunRegistryOutbox",
+        "ObjectStore"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-029"
+      ],
+      "acceptance_scenario": "Success/error/timeout/cancelled имеют неизменяемые raw artifacts и уникальный run/candidate/case/repetition/sequence. Redelivery не создаёт дубль; сознательный повтор получает новый sequence и причину.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "fault_injection"
+        ],
+        "expected_evidence": [
+          "Attempt completeness/uniqueness report",
+          "Raw hashes и тест redelivery versus intentional retry"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#invariants",
+        "../docs/architecture.html#domain",
+        "../docs/architecture.html#workflow"
+      ]
+    },
+    {
+      "id": "ALPHA-036",
+      "key": "cancel",
+      "title": "Отмена останавливает новую работу и сохраняет частичный результат",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G4",
+      "modules": [
+        "RunWorkflow",
+        "RunnerCoordinator",
+        "ModelGateway",
+        "Web"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-028",
+        "ALPHA-030",
+        "ALPHA-024",
+        "ALPHA-035"
+      ],
+      "acceptance_scenario": "Отмена из queued/preparing/running/scoring/unknown не выдаёт новые dispatch, сигнализирует активным задачам и сохраняет partial/cancel receipt. На здоровом API UI отражает команду ≤2 с, новые разрешения прекращаются ≤5 с после обработки; уже отправленные вызовы остаются видимыми.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "fault_injection",
+          "timing_test"
+        ],
+        "expected_evidence": [
+          "Cancellation receipts с stopped/completed/possibly billed/resources",
+          "Измерения задержки отмены в заявленной среде"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#quality",
+        "../docs/architecture.html#execution",
+        "../docs/architecture.html#workflow"
+      ]
+    },
+    {
+      "id": "ALPHA-037",
+      "key": "recovery",
+      "title": "Падение worker не дублирует известный платный успех",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G4",
+      "modules": [
+        "RunWorkflow",
+        "RunnerCoordinator",
+        "Collector",
+        "Reconciler"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-028",
+        "ALPHA-035",
+        "ALPHA-024"
+      ],
+      "acceptance_scenario": "Worker останавливается до/после записи результата и во время upload; восстановление сохраняет завершённые попытки, регистрирует content-addressed artifacts без дубля, неизвестный эффект отправляет в reconciliation, а report можно повторить без новых model calls.",
+      "verification": {
+        "kinds": [
+          "fault_injection",
+          "integration_test"
+        ],
+        "expected_evidence": [
+          "Fault matrix с точками остановки и ожидаемыми исходами",
+          "Trace/ledger/attempt reconciliation report"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#quality",
+        "../docs/architecture.html#workflow"
+      ]
+    },
+    {
+      "id": "ALPHA-038",
+      "key": "experimental_design",
+      "title": "Протокол удерживает условия честного эксперимента",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G5",
+      "modules": [
+        "ProtocolRegistry",
+        "DatasetRegistry",
+        "RunnerCoordinator"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-018",
+        "ALPHA-031"
+      ],
+      "acceptance_scenario": "Development и held-out разделены до запуска; зафиксированы split/cohort hashes, baseline, randomization, repeats, cache/warmup, concurrency, timeouts и stopping policy. Синтетическое происхождение и exploratory режим обозначены.",
+      "verification": {
+        "kinds": [
+          "domain_test",
+          "integration_test",
+          "methodology_review"
+        ],
+        "expected_evidence": [
+          "Frozen experimental manifest",
+          "Dataset lineage и held-out access report",
+          "Review baseline и правил остановки"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#packs",
+        "../docs/architecture.html#metrics"
+      ]
+    },
+    {
+      "id": "ALPHA-039",
+      "key": "metric_registry",
+      "title": "Метрики имеют явные определения и знаменатели",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G5",
+      "modules": [
+        "MetricRegistry",
+        "MeasurementWorker"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-035",
+        "ALPHA-038"
+      ],
+      "acceptance_scenario": "Для каждой метрики сохранены ID/version/unit/direction/scorer/aggregator/eligibility. Ошибка, missing, infrastructure failure и корректный zero различаются; timeout/error и исключения следуют заранее фиксированной политике.",
+      "verification": {
+        "kinds": [
+          "golden_fixture_test",
+          "domain_test"
+        ],
+        "expected_evidence": [
+          "Metric definitions и policy snapshots",
+          "Golden edge cases: empty/NaN/errors/duplicates/uneven repeats"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#quality",
+        "../docs/architecture.html#metrics"
+      ]
+    },
+    {
+      "id": "ALPHA-040",
+      "key": "aggregates",
+      "title": "Агрегаты независимо проверены на сырых попытках",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G5",
+      "modules": [
+        "MeasurementWorker",
+        "BudgetLedger"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-039",
+        "ALPHA-023"
+      ],
+      "acceptance_scenario": "Независимый расчёт подтверждает quality, p50/p95, стоимость задачи/успеха и вариативность; ноль успехов даёт undefined cost_per_success, пустая выборка не даёт ноль, малая выборка помечает нестабильный p95. Расходы research и эксплуатации кандидата разделены.",
+      "verification": {
+        "kinds": [
+          "golden_fixture_test",
+          "independent_calculation"
+        ],
+        "expected_evidence": [
+          "Golden dataset и независимый расчёт",
+          "Observation/aggregate provenance и состав included_cost"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#quality",
+        "../docs/architecture.html#metrics",
+        "../docs/architecture.html#approval"
+      ]
+    },
+    {
+      "id": "ALPHA-041",
+      "key": "uncertainty",
+      "title": "Интервалы и парные эффекты учитывают независимость кейсов",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G5",
+      "modules": [
+        "MeasurementWorker",
+        "ComparisonService"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-040"
+      ],
+      "acceptance_scenario": "Повторы не увеличивают число независимых задач. Paired comparison использует общие case IDs, cluster bootstrap сохраняет повторы кейса; сохранены N/repeats/method/seed/resamples/exclusions, недостаточная выборка не создаёт уверенный эффект.",
+      "verification": {
+        "kinds": [
+          "golden_fixture_test",
+          "independent_calculation",
+          "methodology_review"
+        ],
+        "expected_evidence": [
+          "Статистические fixtures и воспроизводимый независимый расчёт CI",
+          "Метаданные выборки/интервала и перечисленные исключения"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#packs",
+        "../docs/architecture.html#metrics"
+      ]
+    },
+    {
+      "id": "ALPHA-042",
+      "key": "judge",
+      "title": "LLM-оценка имеет происхождение и человеческую калибровку",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G5",
+      "modules": [
+        "Scorer",
+        "ModelGateway",
+        "EvidenceReportQueries"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-021",
+        "ALPHA-031",
+        "ALPHA-039"
+      ],
+      "acceptance_scenario": "Для judge сохраняются rubric/prompt/model/version/params/raw response, меняется порядок кандидатов и применяются слепые labels где возможно. Владелец размечает сбалансированную подвыборку; расхождения и спорные примеры остаются доступны.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "human_calibration",
+          "methodology_review"
+        ],
+        "expected_evidence": [
+          "Judge manifest и raw outputs",
+          "Calibration set, human labels и disagreement report"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#packs",
+        "../docs/architecture.html#metrics"
+      ]
+    },
+    {
+      "id": "ALPHA-043",
+      "key": "compatibility",
+      "title": "Сравнение допускается только по проверенным условиям",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G5",
+      "modules": [
+        "ComparisonService",
+        "ProtocolRegistry"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-041",
+        "ALPHA-038"
+      ],
+      "acceptance_scenario": "Compatibility fingerprint включает задачу/dataset/split/cases/scorer/metric/limits/tools/repeats/cache/concurrency/profile/analysis и исключает candidate ID. Compatible/conditional/incompatible объяснены; видны common cases/exclusions, несопоставимые результаты не объявляют победителя.",
+      "verification": {
+        "kinds": [
+          "domain_test",
+          "integration_test"
+        ],
+        "expected_evidence": [
+          "Матрица positive/conditional/negative comparisons",
+          "Diff условий и предложенный bridge experiment"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#invariants",
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#comparisons"
+      ]
+    },
+    {
+      "id": "ALPHA-044",
+      "key": "evidence_report",
+      "title": "Каждый вывод отчёта ведёт к доказательству",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G5",
+      "modules": [
+        "EvidenceReportQueries",
+        "AgentRuntime",
+        "MeasurementWorker"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-040",
+        "ALPHA-043",
+        "ALPHA-014"
+      ],
+      "acceptance_scenario": "KPI раскрывается до metric/scorer version и raw attempts, вывод — до observations или source spans. Чужая attempt reference, неподтверждённая цифра и попытка выдать текст модели за измерение отклоняются либо явно помечаются.",
+      "verification": {
+        "kinds": [
+          "integration_test",
+          "security_test",
+          "user_acceptance"
+        ],
+        "expected_evidence": [
+          "Report validation tests",
+          "Evidence chain examples",
+          "Отчёт с пользой, границами и неопределённостью"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#quality",
+        "../docs/architecture.html#domain"
+      ]
+    },
+    {
+      "id": "ALPHA-045",
+      "key": "derived_versions",
+      "title": "Пересчёт и новая интерпретация не переписывают evidence",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G5",
+      "modules": [
+        "MeasurementWorker",
+        "EvidenceReportQueries",
+        "ObjectStore"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-044"
+      ],
+      "acceptance_scenario": "Исправление scorer или новая генерация отчёта создаёт scoring/finding/report revision и supersedes с причиной; старые raw attempts и прежние производные версии сохраняются доступными по правам.",
+      "verification": {
+        "kinds": [
+          "integration_test"
+        ],
+        "expected_evidence": [
+          "Revision/provenance tests",
+          "Пример diff интерпретации и пересчёта без новых model calls"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#invariants",
+        "../docs/architecture.html#domain"
+      ]
+    },
+    {
+      "id": "ALPHA-046",
+      "key": "repeat_export",
+      "title": "Рецепт можно экспортировать и повторить с честными ограничениями",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G5",
+      "modules": [
+        "ProtocolRegistry",
+        "RunRegistryOutbox",
+        "EvidenceReportQueries"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-020",
+        "ALPHA-044",
+        "ALPHA-009"
+      ],
+      "acceptance_scenario": "Экспорт manifest/results сохраняет версии и evidence refs. Repeat создаёт новый Run только при доступных артефактах и новом/ещё разрешённом approval; исчезнувшая модель или изменившийся API требуют обновлённого плана, без скрытого fallback.",
+      "verification": {
+        "kinds": [
+          "schema_test",
+          "integration_test",
+          "user_acceptance"
+        ],
+        "expected_evidence": [
+          "Версионированные export schemas и round-trip fixture",
+          "Repeat test и unavailable-version fixture",
+          "Обозначенный уровень воспроизводимости"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#release",
+        "../docs/architecture.html#comparisons"
+      ]
+    },
+    {
+      "id": "ALPHA-047",
+      "key": "constellation",
+      "title": "Constellation реализует полный путь через API",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G6",
+      "modules": [
+        "Web",
+        "ControlAPI",
+        "EvidenceReportQueries"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-044",
+        "ALPHA-046",
+        "ALPHA-013"
+      ],
+      "acceptance_scenario": "В реальном workspace пользователь проходит входящие→исследование/план→approval→run→compare→knowledge/evidence; есть пустые/ошибочные/частичные состояния. Значимые действия вызывают серверные команды, сохранённые решения связаны с версиями evidence.",
+      "verification": {
+        "kinds": [
+          "end_to_end_test",
+          "user_acceptance"
+        ],
+        "expected_evidence": [
+          "Playwright trace полного сценария",
+          "Демонстрация API-backed экранов выбранного Constellation"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#ui",
+        "../docs/implementation-plan.html#stages",
+        "../docs/architecture.html#principles"
+      ]
+    },
+    {
+      "id": "ALPHA-048",
+      "key": "progress_sse",
+      "title": "Прогресс переживает обрыв соединения",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G6",
+      "modules": [
+        "Web",
+        "EventStream",
+        "RunRegistryOutbox"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-047",
+        "ALPHA-028",
+        "ALPHA-037"
+      ],
+      "acceptance_scenario": "SSE показывает стадии, исходы и финансовый статус; reconnect восстанавливает согласованное состояние без потери и дублирования событий. Временная задержка проекции и неизвестный исход не выглядят завершённым успехом.",
+      "verification": {
+        "kinds": [
+          "end_to_end_test",
+          "fault_injection"
+        ],
+        "expected_evidence": [
+          "SSE reconnect/replay trace",
+          "UI screenshots running/partial/unknown/stale"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#quality",
+        "../docs/architecture.html#workflow"
+      ]
+    },
+    {
+      "id": "ALPHA-049",
+      "key": "accessible_ui",
+      "title": "Минималистичный UI доступен на desktop и mobile",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G6",
+      "modules": [
+        "Web"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-047"
+      ],
+      "acceptance_scenario": "Полный путь доступен клавиатурой; модали, focus, подписи, контраст и reduced motion проверены на 390/1440 px без page overflow. Каждый график имеет единицы, N/interval где применимо и табличную альтернативу; цвет не единственный носитель смысла.",
+      "verification": {
+        "kinds": [
+          "accessibility_check",
+          "visual_check",
+          "end_to_end_test"
+        ],
+        "expected_evidence": [
+          "Playwright 390/1440 traces/screenshots",
+          "Keyboard/contrast/reduced-motion review",
+          "Chart/table consistency assertions"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#quality",
+        "../docs/architecture.html#metrics"
+      ]
+    },
+    {
+      "id": "ALPHA-050",
+      "key": "demo_separation",
+      "title": "Демонстрационные данные отделены от настоящего workspace",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G6",
+      "modules": [
+        "Web",
+        "ControlAPI"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-047"
+      ],
+      "acceptance_scenario": "Synthetic mode имеет видимую маркировку и отдельный источник данных; переключение не создаёт реальный запуск и не смешивает demo метрики с фактическими отчётами. Неизвестное значение отображает причину отсутствия.",
+      "verification": {
+        "kinds": [
+          "end_to_end_test",
+          "user_acceptance"
+        ],
+        "expected_evidence": [
+          "Demo/real separation test",
+          "Empty/missing/synthetic UI captures"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#ui"
+      ]
+    },
+    {
+      "id": "ALPHA-051",
+      "key": "transparent_ui",
+      "title": "Пользователь понимает версию, бюджет и причину результата",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G6",
+      "modules": [
+        "Web",
+        "ApprovalService",
+        "BudgetLedger",
+        "EvidenceReportQueries"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-048",
+        "ALPHA-049",
+        "ALPHA-024"
+      ],
+      "acceptance_scenario": "Без пояснения разработчика пользователь видит утверждаемую версию/цену/лимит, отличает estimate/reserved/settled/unknown, находит неудачный пример и условия сравнения. Все числа графиков совпадают с API и таблицами.",
+      "verification": {
+        "kinds": [
+          "user_acceptance",
+          "end_to_end_test"
+        ],
+        "expected_evidence": [
+          "Протокол walkthrough владельца",
+          "Assertions chart/table/API/ledger consistency"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#release",
+        "../docs/architecture.html#approval"
+      ]
+    },
+    {
+      "id": "ALPHA-052",
+      "key": "three_pack_e2e",
+      "title": "Три методики прошли сквозную приёмку на fake providers",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G7",
+      "modules": [
+        "Web",
+        "ControlAPI",
+        "ModelGateway",
+        "RunnerCoordinator",
+        "MeasurementWorker"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-032",
+        "ALPHA-033",
+        "ALPHA-034",
+        "ALPHA-051",
+        "ALPHA-050",
+        "ALPHA-045",
+        "ALPHA-036",
+        "ALPHA-037"
+      ],
+      "acceptance_scenario": "Для каждого пакета выполняется source→plan→approve→execute→report→repeat/compare; отдельные сценарии проверяют cancel и unknown. CI воспроизводим и не зависит от платной модели.",
+      "verification": {
+        "kinds": [
+          "end_to_end_test",
+          "fault_injection"
+        ],
+        "expected_evidence": [
+          "Три сохранённых исследования и отчёта",
+          "CI result на frozen fake fixtures",
+          "Матрица сценариев полного цикла"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#quality",
+        "../docs/implementation-plan.html#release"
+      ]
+    },
+    {
+      "id": "ALPHA-053",
+      "key": "real_pilot",
+      "title": "Ограниченный реальный пилот подтверждает интеграции",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G7",
+      "modules": [
+        "ModelGateway",
+        "RunnerCoordinator",
+        "MeasurementWorker",
+        "Web"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-052",
+        "ALPHA-042"
+      ],
+      "acceptance_scenario": "После отдельного человеческого согласования пилотного плана и бюджета выполняются разрешённые вызовы OpenAI/Anthropic; полный цикл хотя бы одного исследования и ledger сверяются с наблюдаемыми usage/IDs. Неподтверждённые billing сведения остаются unknown/estimate.",
+      "verification": {
+        "kinds": [
+          "live_integration_test",
+          "user_acceptance"
+        ],
+        "expected_evidence": [
+          "Pilot Approval с hard limit/scope",
+          "Реальные provider receipts/usage и отчёт сверки",
+          "Проверенный сквозной отчёт в разрешённом бюджете"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#release"
+      ]
+    },
+    {
+      "id": "ALPHA-054",
+      "key": "release_restore",
+      "title": "Полный лабораторный результат восстановлен в чистой среде",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G7",
+      "modules": [
+        "Operations",
+        "PostgreSQL",
+        "ObjectStore"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-010",
+        "ALPHA-052",
+        "ALPHA-053"
+      ],
+      "acceptance_scenario": "Из резервной копии восстанавливаются выбранный отчёт, исходники, manifest, approval, ledger и evidence; hashes и права проверены, повторное чтение не вызывает новые расходы.",
+      "verification": {
+        "kinds": [
+          "restore_drill",
+          "security_test"
+        ],
+        "expected_evidence": [
+          "Финальный restore report со временем/средой/командами",
+          "Integrity manifest и audit восстановления"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#quality",
+        "../docs/implementation-plan.html#release"
+      ]
+    },
+    {
+      "id": "ALPHA-055",
+      "key": "operations",
+      "title": "Наблюдаемость и эксплуатационные действия готовы",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G7",
+      "modules": [
+        "Operations",
+        "Reconciler",
+        "Telemetry"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-011",
+        "ALPHA-037",
+        "ALPHA-024",
+        "ALPHA-054"
+      ],
+      "acceptance_scenario": "Оператор видит алерты зависших запусков, unknown exposure и ошибок импорта; runbook позволяет найти trace, остановить dispatch, сверить расход и безопасно восстановить сервис. Миграции, backup и rollback указаны для релиза.",
+      "verification": {
+        "kinds": [
+          "operational_drill",
+          "document_review"
+        ],
+        "expected_evidence": [
+          "Runbook и демонстрация alert fixtures",
+          "Deployment/migration/rollback checklist и известные ограничения"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#deployment"
+      ]
+    },
+    {
+      "id": "ALPHA-056",
+      "key": "usefulness",
+      "title": "Владелец подтверждает полезность исследования и границы выводов",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G7",
+      "modules": [
+        "Product",
+        "EvidenceReportQueries"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-053",
+        "ALPHA-051"
+      ],
+      "acceptance_scenario": "Владелец самостоятельно отвечает по отчёту: что технология улучшила, на каких задачах не сработала, что изучать/пробовать/применять дальше; проверяет спорные оценки и несопоставимые условия.",
+      "verification": {
+        "kinds": [
+          "user_acceptance",
+          "methodology_review"
+        ],
+        "expected_evidence": [
+          "Краткий подписанный протокол приёмки владельца",
+          "Разобранные примеры ошибок и judge disagreements"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#scope",
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#release"
+      ]
+    },
+    {
+      "id": "ALPHA-057",
+      "key": "release",
+      "title": "Приватная альфа выпущена со всеми обязательными доказательствами",
+      "priority": "P0",
+      "release_blocking": true,
+      "gate": "G7",
+      "modules": [
+        "Product",
+        "Operations",
+        "AllModules"
+      ],
+      "status": "not_started",
+      "implementation_owner": "Claude (developer)",
+      "reviewer": "Codex (technical lead)",
+      "depends_on": [
+        "ALPHA-001",
+        "ALPHA-002",
+        "ALPHA-003",
+        "ALPHA-004",
+        "ALPHA-005",
+        "ALPHA-006",
+        "ALPHA-007",
+        "ALPHA-008",
+        "ALPHA-009",
+        "ALPHA-010",
+        "ALPHA-011",
+        "ALPHA-012",
+        "ALPHA-013",
+        "ALPHA-014",
+        "ALPHA-015",
+        "ALPHA-016",
+        "ALPHA-017",
+        "ALPHA-018",
+        "ALPHA-019",
+        "ALPHA-020",
+        "ALPHA-021",
+        "ALPHA-022",
+        "ALPHA-023",
+        "ALPHA-024",
+        "ALPHA-025",
+        "ALPHA-026",
+        "ALPHA-027",
+        "ALPHA-028",
+        "ALPHA-029",
+        "ALPHA-030",
+        "ALPHA-031",
+        "ALPHA-032",
+        "ALPHA-033",
+        "ALPHA-034",
+        "ALPHA-035",
+        "ALPHA-036",
+        "ALPHA-037",
+        "ALPHA-038",
+        "ALPHA-039",
+        "ALPHA-040",
+        "ALPHA-041",
+        "ALPHA-042",
+        "ALPHA-043",
+        "ALPHA-044",
+        "ALPHA-045",
+        "ALPHA-046",
+        "ALPHA-047",
+        "ALPHA-048",
+        "ALPHA-049",
+        "ALPHA-050",
+        "ALPHA-051",
+        "ALPHA-052",
+        "ALPHA-053",
+        "ALPHA-054",
+        "ALPHA-055",
+        "ALPHA-056"
+      ],
+      "acceptance_scenario": "Все требования ALPHA имеют pass evidence, G0–G7 закрыты, блокирующие дефекты устранены; приватный стенд установлен и передан владельцу с исходниками, lockfiles, migrations, release manifest, export schemas, тремя примерами, командами проверок и списком ограничений.",
+      "verification": {
+        "kinds": [
+          "release_review",
+          "deployment_check"
+        ],
+        "expected_evidence": [
+          "Версионированный release manifest",
+          "Acceptance report по каждому ALPHA ID",
+          "Private deployment smoke test и handover"
+        ],
+        "evidence": [],
+        "result": "not_run"
+      },
+      "source_refs": [
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#release"
+      ]
+    }
+  ],
+  "out_of_alpha": [
+    {
+      "priority": "P1",
+      "item": "Расширенный импорт GitHub и Hugging Face: pinned repository/model artifacts, submodules/LFS, права лицензий и gated downloads.",
+      "reason": "Общие URL/файлы и метаданные разрешены в альфе; полноценные специализированные коннекторы — следующая поставка.",
+      "source_refs": [
+        "../docs/implementation-plan.html#backlog"
+      ]
+    },
+    {
+      "priority": "P1",
+      "item": "Invited beta: приглашения, совместная работа, роли участников, общий доступ, отдельные quotas и нагрузочные сценарии нескольких workspace.",
+      "reason": "Базовая workspace isolation входит в альфу; многопользовательский продукт — после G7.",
+      "source_refs": [
+        "../docs/implementation-plan.html#scope",
+        "../docs/implementation-plan.html#backlog",
+        "../docs/implementation-plan.html#quality"
+      ]
+    },
+    {
+      "priority": "P1",
+      "item": "Новые модельные провайдеры и локальные inference adapters сверх OpenAI/Anthropic.",
+      "reason": "Добавляются после conformance suite первых двух адаптеров.",
+      "source_refs": [
+        "../docs/implementation-plan.html#backlog"
+      ]
+    },
+    {
+      "priority": "P1",
+      "item": "Расписания и автоматические проверки новых версий с отдельным budget scope.",
+      "reason": "После stable runs и явного запроса владельца.",
+      "source_refs": [
+        "../docs/implementation-plan.html#backlog",
+        "../docs/architecture.html#comparisons"
+      ]
+    },
+    {
+      "priority": "P1",
+      "item": "Публичный HTTPS Telegram webhook и hosted multi-user production-профиль.",
+      "reason": "Альфа использует private polling без публичного входящего порта; transport сохраняет общий контракт.",
+      "source_refs": [
+        "../docs/implementation-plan.html#stack",
+        "../docs/implementation-plan.html#stages",
+        "../docs/implementation-plan.html#deployment"
+      ]
+    },
+    {
+      "priority": "P2",
+      "item": "Локальный GPU, обучение моделей, массовая генерация медиа, vision/audio/video execution и робототехника.",
+      "reason": "Каталогизация доступна; нужны отдельные adapters, среды и оценки.",
+      "source_refs": [
+        "../docs/implementation-plan.html#scope",
+        "../docs/implementation-plan.html#backlog"
+      ]
+    },
+    {
+      "priority": "P2",
+      "item": "Публичные методики, обмен исследованиями, curated marketplace и сложный граф знаний.",
+      "reason": "Базовые связи источников/технологий и личная база выводов входят в альфу; сеть исследований — позднее.",
+      "source_refs": [
+        "../docs/implementation-plan.html#backlog"
+      ]
+    },
+    {
+      "priority": "P2",
+      "item": "Публичный рейтинг моделей, платежи SaaS, Kubernetes и автоматическое масштабирование.",
+      "reason": "Не требуются для проверки ценности приватной альфы.",
+      "source_refs": [
+        "../docs/implementation-plan.html#scope",
+        "../docs/implementation-plan.html#deployment"
+      ]
+    },
+    {
+      "priority": "P2",
+      "item": "Исполнение произвольных сторонних пакетов вне трёх проверенных методик и неподконтрольные агентные SDK.",
+      "reason": "Рамка runner/scorer sandbox входит в альфу; универсальное выполнение новых сред не обещается. SDK допускается только после подтверждения учёта и ограничений.",
+      "source_refs": [
+        "../docs/implementation-plan.html#scope",
+        "../docs/architecture.html#integrations",
+        "../docs/architecture.html#execution"
+      ]
+    }
+  ],
+  "open_decisions": [
+    {
+      "id": "DEC-01",
+      "resolve_by": "G0",
+      "topic": "Конкретные версии SDK, lockfiles, модели и account capabilities",
+      "handling": "Pin при реализации и заполнить conformance evidence; каталог моделей не означает право и доступ к вызовам."
+    },
+    {
+      "id": "DEC-02",
+      "resolve_by": "G0",
+      "topic": "Рабочий sandbox/VM профиль для доступного Windows/WSL2/Linux окружения",
+      "handling": "Подтвердить отрицательными тестами; Docker Compose сам по себе не доказательство изоляции."
+    },
+    {
+      "id": "DEC-03",
+      "resolve_by": "G0",
+      "topic": "Объём сценариев, meaningful effect, бюджеты и критерии успеха конкретных методик",
+      "handling": "Зафиксировать в versioned pack/plan до проверочных запусков; не подставлять числа из синтетического UI."
+    },
+    {
+      "id": "DEC-04",
+      "resolve_by": "G3",
+      "topic": "Тарифные снимки и реальная возможность reconciliation каждого провайдера",
+      "handling": "Не поддержанная сверка остаётся явным unknown с ручной процедурой; не обещать нулевой расход или exactly-once внешний эффект."
+    },
+    {
+      "id": "DEC-05",
+      "resolve_by": "G7",
+      "topic": "Ключи и отдельно разрешённый бюджет реального пилота",
+      "handling": "Подготовить конкретный план/оценку; платные вызовы не следуют из согласования разработки."
+    },
+    {
+      "id": "DEC-06",
+      "resolve_by": "G0",
+      "topic": "Фактический режим работы Claude-разработчика и доступные недельные лимиты",
+      "handling": "Измерить пропускную способность на первом инкременте; лимиты разработки не считаются API-кредитами лаборатории."
+    }
+  ]
+}

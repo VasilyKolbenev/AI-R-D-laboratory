@@ -1,0 +1,207 @@
+{
+  "testedAt": "2026-10-07T10:37:35.016Z",
+  "appRevisionSha256": "3eadeaecb0ba808a03d36210bf0638f2621fa226a40d496317d92abc3ef22a48",
+  "isolation": {
+    "freshHeadlessBrowser": true,
+    "freshContext": true,
+    "syntheticOrigin": "http://constellation-test.invalid/",
+    "allOtherNetworkBlocked": true,
+    "fileNavigation": false,
+    "userProfile": false,
+    "existingTabAccess": false
+  },
+  "results": [
+    {
+      "name": "Authored application is a standalone inline artifact",
+      "status": "pass"
+    },
+    {
+      "name": "All six desktop views render without document overflow",
+      "status": "pass",
+      "detail": [
+        {
+          "view": "map",
+          "viewport": 1440,
+          "document": 1440,
+          "body": 1440,
+          "toplineY": 24
+        },
+        {
+          "view": "sources",
+          "viewport": 1440,
+          "document": 1440,
+          "body": 1440,
+          "toplineY": 24
+        },
+        {
+          "view": "study",
+          "viewport": 1440,
+          "document": 1440,
+          "body": 1440,
+          "toplineY": 24
+        },
+        {
+          "view": "runs",
+          "viewport": 1440,
+          "document": 1440,
+          "body": 1440,
+          "toplineY": 24
+        },
+        {
+          "view": "compare",
+          "viewport": 1440,
+          "document": 1440,
+          "body": 1440,
+          "toplineY": 24
+        },
+        {
+          "view": "knowledge",
+          "viewport": 1440,
+          "document": 1440,
+          "body": 1440,
+          "toplineY": 24
+        }
+      ]
+    },
+    {
+      "name": "All six mobile views render without document overflow",
+      "status": "pass",
+      "detail": [
+        {
+          "view": "map",
+          "viewport": 390,
+          "document": 390,
+          "body": 390,
+          "toplineY": 211.078125
+        },
+        {
+          "view": "sources",
+          "viewport": 390,
+          "document": 390,
+          "body": 390,
+          "toplineY": 211.078125
+        },
+        {
+          "view": "study",
+          "viewport": 390,
+          "document": 390,
+          "body": 390,
+          "toplineY": 211.078125
+        },
+        {
+          "view": "runs",
+          "viewport": 390,
+          "document": 390,
+          "body": 390,
+          "toplineY": 211.078125
+        },
+        {
+          "view": "compare",
+          "viewport": 390,
+          "document": 390,
+          "body": 390,
+          "toplineY": 211.078125
+        },
+        {
+          "view": "knowledge",
+          "viewport": 390,
+          "document": 390,
+          "body": 390,
+          "toplineY": 211.078125
+        }
+      ]
+    },
+    {
+      "name": "Chart, table and exported fixture agree numerically",
+      "status": "pass",
+      "detail": {
+        "candidates": 3,
+        "attempts": 1080
+      }
+    },
+    {
+      "name": "Non-memory map node has its own context and no memory metrics",
+      "status": "pass"
+    },
+    {
+      "name": "Source import preserves literal safe text and survives reload",
+      "status": "pass"
+    },
+    {
+      "name": "Fixed plan counts, consent gate and edit require new approval",
+      "status": "pass"
+    },
+    {
+      "name": "Unsupported plan cannot approve or launch a memory simulation",
+      "status": "pass"
+    },
+    {
+      "name": "Simulation can pause, resume and cancel with partial history",
+      "status": "pass"
+    },
+    {
+      "name": "Repeat needs fresh consent, completes and preserves 1080 historical aggregates",
+      "status": "pass",
+      "detail": {
+        "localRuns": 2,
+        "newMeasuredAttempts": 0,
+        "preservedHistoricalAttempts": 1080
+      }
+    },
+    {
+      "name": "Evidence opens, switches failed case and exports provenance",
+      "status": "pass"
+    },
+    {
+      "name": "Incompatible cohort suppresses winner claim and saved conclusion",
+      "status": "pass"
+    },
+    {
+      "name": "Saved decision identifies fixed evidence rather than unrelated plan version",
+      "status": "pass"
+    },
+    {
+      "name": "Provider roles persist while remaining explicitly disconnected",
+      "status": "pass"
+    },
+    {
+      "name": "Historical repeat restores frozen roles and still requires approval",
+      "status": "pass"
+    },
+    {
+      "name": "Memory draft and archived source plans persist locally",
+      "status": "pass"
+    },
+    {
+      "name": "V2 behavioural contract",
+      "status": "pass"
+    },
+    {
+      "name": "No unhandled JavaScript errors",
+      "status": "pass"
+    },
+    {
+      "name": "No console error or CSP violation",
+      "status": "pass"
+    },
+    {
+      "name": "No external request attempted",
+      "status": "pass"
+    }
+  ],
+  "screenshots": [
+    "constellation-v2-desktop-map.png",
+    "constellation-v2-desktop-sources.png",
+    "constellation-v2-desktop-plan.png",
+    "constellation-v2-desktop-runs.png",
+    "constellation-v2-desktop-compare.png",
+    "constellation-v2-desktop-knowledge.png",
+    "constellation-v2-mobile-map.png",
+    "constellation-v2-mobile-plan.png",
+    "constellation-v2-mobile-runs.png",
+    "constellation-v2-desktop-approval.png"
+  ],
+  "errors": [],
+  "consoleErrors": [],
+  "blockedRequests": []
+}

@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "plan_id": "plan.memory-demo",
+  "version": 1,
+  "workspace_id": "workspace.demo",
+  "research_id": "research.memory-demo",
+  "mode": "demo",
+  "phase": "confirmatory",
+  "study_type": "comparison",
+  "title": "Долгая память агента — синтетический пример контракта",
+  "question": "Как разные способы памяти изменяют качество решения, задержку и стоимость на фиксированных сценариях обновления знаний?",
+  "claim_refs": [],
+  "hypotheses": [{"id": "hypothesis.memory-quality", "statement": "Память с обновлением событий повышает долю корректных ответов относительно Context only на этом наборе сценариев.", "metric_id": "metric.success", "expected_direction": "increase", "preregistered": true, "minimum_effect": 5}],
+  "candidates": [
+    {"id": "candidate.context", "name": "Context only", "role": "baseline", "technology_type": "memory", "adapter": "synthetic-memory-fixture:1", "configuration": {"artifact_id": "artifact.config-context", "uri": "artifact://demo/config-context", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "media_type": "application/json", "revision": "demo-v1"}, "model": {"provider": "synthetic", "requested_model": "fixture-model", "resolved_version": "demo-v1", "connection_ref": null, "capability_profile": "synthetic-no-api-v1", "limitations": ["Ни один реальный провайдер не используется."]}, "max_subject_calls_per_attempt": 0},
+    {"id": "candidate.vector", "name": "Vector memory", "role": "candidate", "technology_type": "memory", "adapter": "synthetic-memory-fixture:1", "configuration": {"artifact_id": "artifact.config-vector", "uri": "artifact://demo/config-vector", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "media_type": "application/json", "revision": "demo-v1"}, "model": {"provider": "synthetic", "requested_model": "fixture-model", "resolved_version": "demo-v1", "connection_ref": null, "capability_profile": "synthetic-no-api-v1", "limitations": ["Ни один реальный провайдер не используется."]}, "max_subject_calls_per_attempt": 0},
+    {"id": "candidate.event", "name": "Event memory", "role": "candidate", "technology_type": "memory", "adapter": "synthetic-memory-fixture:1", "configuration": {"artifact_id": "artifact.config-event", "uri": "artifact://demo/config-event", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "media_type": "application/json", "revision": "demo-v1"}, "model": {"provider": "synthetic", "requested_model": "fixture-model", "resolved_version": "demo-v1", "connection_ref": null, "capability_profile": "synthetic-no-api-v1", "limitations": ["Ни один реальный провайдер не используется."]}, "max_subject_calls_per_attempt": 0}
+  ],
+  "protocol": {
+    "id": "protocol.memory",
+    "version": "demo-v1",
+    "artifact": {"artifact_id": "artifact.protocol", "uri": "artifact://demo/protocol", "sha256": "1111111111111111111111111111111111111111111111111111111111111111", "media_type": "application/json", "revision": "demo-v1"},
+    "runner_adapter": "synthetic_fixture", "runner_version": "demo-v1", "scorer_id": "scorer.exact-answer", "scorer_version": "demo-v1", "repetitions": 3, "seed": 42, "randomization": "blocked_by_case", "cache_policy": "disabled", "warmup_attempts": 0, "failure_policy": "count_task_errors_as_failure_report_infra_separately", "tool_catalog_version": "demo-empty-v1", "allowed_tools": []
+  },
+  "dataset": {
+    "id": "dataset.memory", "version": "demo-v1",
+    "artifact": {"artifact_id": "artifact.dataset-inputs", "uri": "artifact://demo/inputs", "sha256": "2222222222222222222222222222222222222222222222222222222222222222", "media_type": "application/x-ndjson", "revision": "demo-v1"},
+    "gold_artifact": {"artifact_id": "artifact.dataset-gold", "uri": "artifact://demo/gold", "sha256": "3333333333333333333333333333333333333333333333333333333333333333", "media_type": "application/x-ndjson", "revision": "demo-v1"},
+    "split": "heldout", "case_count": 120, "case_manifest_sha256": "4444444444444444444444444444444444444444444444444444444444444444", "scenario_counts": {"facts": 30, "updates": 30, "conflicts": 30, "noise": 30}, "gold_access": "scorer_only", "synthetic": true, "license_ref": "internal-synthetic-demo"
+  },
+  "metrics": [
+    {"id": "metric.success", "name": "Доля корректных ответов", "definition_version": "demo-v1", "unit": "percent", "direction": "maximize", "primary": true, "aggregation": "mean", "missing_policy": "explicit_missing", "zero_denominator": "undefined"},
+    {"id": "metric.latency-p95", "name": "Полная задержка p95", "definition_version": "demo-v1", "unit": "seconds", "direction": "minimize", "primary": false, "aggregation": "p95", "missing_policy": "explicit_missing", "zero_denominator": "not_applicable"},
+    {"id": "metric.cost", "name": "Условная стоимость за 100 задач", "definition_version": "demo-v1", "unit": "usd_per_100_tasks", "direction": "minimize", "primary": false, "aggregation": "ratio", "missing_policy": "explicit_missing", "zero_denominator": "undefined"}
+  ],
+  "frozen_artifacts": [
+    {"role": "protocol", "artifact": {"artifact_id": "artifact.protocol", "uri": "artifact://demo/protocol", "sha256": "1111111111111111111111111111111111111111111111111111111111111111", "media_type": "application/json", "revision": "demo-v1"}},
+    {"role": "dataset_inputs", "artifact": {"artifact_id": "artifact.dataset-inputs", "uri": "artifact://demo/inputs", "sha256": "2222222222222222222222222222222222222222222222222222222222222222", "media_type": "application/x-ndjson", "revision": "demo-v1"}},
+    {"role": "dataset_gold", "artifact": {"artifact_id": "artifact.dataset-gold", "uri": "artifact://demo/gold", "sha256": "3333333333333333333333333333333333333333333333333333333333333333", "media_type": "application/x-ndjson", "revision": "demo-v1"}},
+    {"role": "case_manifest", "artifact": {"artifact_id": "artifact.case-manifest", "uri": "artifact://demo/case-manifest", "sha256": "4444444444444444444444444444444444444444444444444444444444444444", "media_type": "application/json", "revision": "demo-v1"}},
+    {"role": "source_code", "artifact": {"artifact_id": "artifact.source-code", "uri": "artifact://demo/source", "sha256": "5555555555555555555555555555555555555555555555555555555555555555", "media_type": "application/zip", "revision": "demo-v1"}},
+    {"role": "prompt", "artifact": {"artifact_id": "artifact.prompts", "uri": "artifact://demo/prompts", "sha256": "6666666666666666666666666666666666666666666666666666666666666666", "media_type": "application/json", "revision": "demo-v1"}},
+    {"role": "runner", "artifact": {"artifact_id": "artifact.runner", "uri": "artifact://demo/runner", "sha256": "7777777777777777777777777777777777777777777777777777777777777777", "media_type": "application/zip", "revision": "demo-v1"}},
+    {"role": "scorer", "artifact": {"artifact_id": "artifact.scorer", "uri": "artifact://demo/scorer", "sha256": "8888888888888888888888888888888888888888888888888888888888888888", "media_type": "application/zip", "revision": "demo-v1"}},
+    {"role": "environment_image", "artifact": {"artifact_id": "artifact.environment", "uri": "artifact://demo/environment-image", "sha256": "9999999999999999999999999999999999999999999999999999999999999999", "media_type": "application/vnd.oci.image.manifest.v1+json", "revision": "demo-v1"}},
+    {"role": "dependency_lock", "artifact": {"artifact_id": "artifact.dependency-lock", "uri": "artifact://demo/dependency-lock", "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "media_type": "text/plain", "revision": "demo-v1"}},
+    {"role": "tool_catalog", "artifact": {"artifact_id": "artifact.tool-catalog", "uri": "artifact://demo/tool-catalog", "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "media_type": "application/json", "revision": "demo-empty-v1"}},
+    {"role": "price_snapshot", "artifact": {"artifact_id": "artifact.price-snapshot", "uri": "artifact://demo/prices", "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "media_type": "application/json", "revision": "demo-v1"}},
+    {"role": "candidate_configuration", "candidate_id": "candidate.context", "artifact": {"artifact_id": "artifact.config-context", "uri": "artifact://demo/config-context", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "media_type": "application/json", "revision": "demo-v1"}},
+    {"role": "candidate_configuration", "candidate_id": "candidate.vector", "artifact": {"artifact_id": "artifact.config-vector", "uri": "artifact://demo/config-vector", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "media_type": "application/json", "revision": "demo-v1"}},
+    {"role": "candidate_configuration", "candidate_id": "candidate.event", "artifact": {"artifact_id": "artifact.config-event", "uri": "artifact://demo/config-event", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "media_type": "application/json", "revision": "demo-v1"}}
+  ],
+  "identities": {
+    "researcher": {"principal_ref": "service.researcher-demo", "capabilities": ["sources.read", "plans.propose", "reports.propose"]},
+    "subject": {"principal_ref": "service.subject-demo", "capabilities": ["case.input.read", "attempt.output.write_scoped"]},
+    "judge": {"principal_ref": "service.scorer-demo", "capabilities": ["case.gold.read", "attempt.output.read", "observations.write_scoped"]},
+    "human_approver_policy": "workspace_human_with_run_approve_permission"
+  },
+  "execution": {
+    "profile": "synthetic", "concurrency": 2, "max_attempts": 1080, "max_provider_calls": 0, "max_judge_calls_per_attempt": 0, "attempt_timeout_seconds": 60, "wall_time_limit_seconds": 3600, "cpu_cores": 2, "memory_mb": 4096, "disk_mb": 2048, "gpu_count": 0,
+    "network": {"egress": "disabled", "allowed_hosts": [], "direct_provider_access": false, "control_database_access": false},
+    "provider_policy": {"silent_fallback": "forbid", "sdk_conformance_required": true, "unknown_charge_handling": "hold_reservation_and_reconcile"},
+    "retry_policy": {"safe_internal_max_retries": 3, "paid_call_unknown_outcome": "reconcile_before_retry", "explicit_additional_attempts": 0},
+    "cancellation_policy": "stop_new_dispatch_cancel_active_collect_receipts_preserve_unknown_reserves"
+  },
+  "budget": {
+    "currency": "USD", "ledger_scope": "experiment", "discovery_budget_ref": "budget.discovery-demo", "limit_usd": 0,
+    "estimate_usd": {"minimum": 0, "expected": 0, "maximum": 0},
+    "cost_lines_usd": {"researcher": {"minimum": 0, "expected": 0, "maximum": 0}, "subject": {"minimum": 0, "expected": 0, "maximum": 0}, "judge": {"minimum": 0, "expected": 0, "maximum": 0}, "compute": {"minimum": 0, "expected": 0, "maximum": 0}, "storage": {"minimum": 0, "expected": 0, "maximum": 0}},
+    "price_snapshot": {"artifact_id": "artifact.price-snapshot", "uri": "artifact://demo/prices", "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "media_type": "application/json", "revision": "demo-v1"},
+    "price_status": "synthetic", "reservation_mode": "atomic_upper_bound_before_dispatch", "unknown_charges_hold": true, "in_flight_included": true
+  },
+  "approval_policy": {"human_required": true, "plan_hash_required": true, "separate_paid_pilot_approval": true, "expires_after_hours": 24, "maximum_runs": 1, "changes_require_reapproval": true},
+  "analysis": {"paired": true, "pairing_key": "case_id", "resampling_unit": "case_cluster_with_repetitions", "confidence_level": 0.95, "bootstrap_resamples": 2000, "analysis_seed": 42, "candidate_ids_excluded_from_compatibility_hash": true, "judge_blinding": "not_applicable_deterministic", "human_calibration": "not_applicable_deterministic", "exclusions": ["Неразрешённый инфраструктурный сбой остаётся отдельным missing/error и исключается из метрики только по объявленной eligibility policy; его доля всегда показывается."]},
+  "retention": {"raw_days": 90, "derived_days": 365, "telemetry_days": 30, "delete_with_tombstone": true, "redaction_policy_version": "proposed-v1"},
+  "notes": [
+    "Синтетический пример схемы от 07.10.2026, не работающий эксперимент и не подписанное разрешение.",
+    "Все повторяющиеся SHA-256 — обозначенные placeholder digests. Artifact URI не существуют. Live validator обязан отклонить такой manifest.",
+    "Бюджет реальных вызовов равен нулю. UI показывает условные сравнительные ставки $1.80, $2.60 и $3.10 за 100 задач; их условная сумма на 360 попыток каждого кандидата равна $27, но это не реальный расход и не бюджет данной demo-процедуры.",
+    "Значения 68%, 82%, 89%, p95 1.2/2.0/2.6 секунды в UI — синтетические демонстрационные агрегаты, а не результаты исполнения этого JSON.",
+    "120 кейсов × 3 повтора × 3 кандидата = 1080 попыток. Повторы одного кейса не считаются независимыми задачами."
+  ]
+}

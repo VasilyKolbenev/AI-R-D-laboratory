@@ -1,0 +1,32 @@
+const fs=require('fs'),path=require('path'),assert=require('assert/strict');
+const {pathToFileURL}=require('url');
+const playwright = require('playwright');
+const {chromium}=playwright;
+const root=path.resolve(__dirname,'..'),results=[];
+(async()=>{
+ const b=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHANNEL ? {channel:process.env.PLAYWRIGHT_CHANNEL} : {})});
+ const c=await b.newContext({viewport:{width:1440,height:1000},acceptDownloads:true,reducedMotion:'reduce'});
+ const p=await c.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));
+ async function check(name,fn){try{await fn();results.push({name,status:'pass'})}catch(e){results.push({name,status:'fail',error:e.message})}}
+ await p.goto(pathToFileURL(path.join(root,'ui','01-observatory.html')).href);
+ await check('01 candidate changes metrics',async()=>{await p.locator('button[data-candidate="0"]').first().click();assert.match(await p.locator('#qualityValue').innerText(),/68/);await p.locator('button[data-candidate="2"]').first().click();assert.match(await p.locator('#qualityValue').innerText(),/89/)});
+ await check('01 comparison toggle',async()=>{await p.locator('#compareToggle').uncheck();assert.equal(await p.locator('#compareToggle').isChecked(),false);await p.locator('#compareToggle').check()});
+ await check('01 methodology and evidence tabs',async()=>{await p.locator('#tab-method').click();assert(await p.locator('#view-method').isVisible());await p.locator('#tab-evidence').click();assert(await p.locator('#view-evidence').isVisible());await p.locator('#tab-overview').click()});
+ await check('01 explicit simulation confirmation',async()=>{await p.locator('#newRunButton').click();assert(await p.locator('#confirmSimulation').isVisible());await p.screenshot({path:path.join(__dirname,'01-approval.png')});await p.locator('#confirmSimulation').click();assert(await p.locator('#simulationResult').isVisible());await p.keyboard.press('Escape');assert(!(await p.locator('#confirmSimulation').isVisible()))});
+ await check('01 JSON export',async()=>{const d=p.waitForEvent('download');await p.locator('#exportButton').click();const data=JSON.parse(fs.readFileSync(await(await d).path(),'utf8'));assert(data && typeof data==='object')});
+ await check('01 saved idea survives panel reopening',async()=>{await p.locator('[data-nav="research"]').click();await p.locator('[data-open="inbox"]').click();await p.locator('#saveIdea').click();assert.match(await p.locator('#inboxIdeaStatus').innerText(),/локальной очереди/);await p.locator('#closeDrawer').click();await p.locator('[data-open="inbox"]').click();assert(await p.locator('#saveIdea').isDisabled());assert.match(await p.locator('#saveIdea').innerText(),/сохранена/);await p.locator('#closeDrawer').click()});
+ await p.goto(pathToFileURL(path.join(root,'ui','02-atelier.html')).href);
+ await check('02 candidate selection',async()=>{await p.locator('#candidateSelect').selectOption({index:2});assert.match(await p.locator('#qualityValue').innerText(),/68/);await p.locator('#candidateSelect').selectOption({index:0})});
+ await check('02 comparison/evidence navigation',async()=>{await p.locator('#tab-compare').click();assert(await p.locator('#view-compare').isVisible());await p.locator('#tab-evidence').click();assert(await p.locator('#view-evidence').isVisible());await p.locator('#tab-report').click()});
+ await check('02 approval gates local simulation',async()=>{await p.locator('#repeatButton').click();assert(await p.locator('#startDemo').isDisabled());await p.screenshot({path:path.join(__dirname,'02-approval.png')});await p.locator('#confirmDemo').check();assert(!(await p.locator('#startDemo').isDisabled()));await p.locator('#startDemo').click();await p.waitForTimeout(3000);assert.match(await p.locator('#runLabel').innerText(),/реальных измерений не было/);await p.locator('#closeDrawer').click()});
+ await p.goto(pathToFileURL(path.join(root,'ui','03-constellation-v1.html')).href);
+ await check('03 map node changes inspector',async()=>{await p.getByRole('button',{name:/Поиск и RAG/}).first().click();assert.match(await p.locator('#node-title').innerText(),/Поиск/);await p.getByRole('button',{name:/Долгая память/}).first().click()});
+ await check('03 filter and view navigation',async()=>{await p.locator('#status-filter').selectOption({index:1});await p.locator('#status-filter').selectOption({index:0});await p.locator('button[data-view="experiments"]').click();assert(await p.locator('#view-experiments').isVisible());await p.locator('button[data-view="compare"]').click();assert(await p.locator('#view-compare').isVisible())});
+ await check('03 CSV export',async()=>{const d=p.waitForEvent('download');await p.locator('#compare-export').click();const text=fs.readFileSync(await(await d).path(),'utf8');assert.match(text,/Context only/);assert.match(text,/Event memory/)});
+ await check('03 approval gates and starts local simulation',async()=>{await p.locator('button[data-view="experiments"]').click();await p.locator('#repeat-experiment').click();assert(await p.locator('#start-simulation').isDisabled());await p.screenshot({path:path.join(__dirname,'03-approval.png')});await p.locator('#confirm-simulation').check();await p.locator('#start-simulation').click();assert(await p.locator('#simulation-dialog').isVisible());await p.locator('#stop-simulation').click()});
+ await check('03 draft creation persists',async()=>{if(await p.locator('#simulation-dialog').isVisible())await p.locator('[data-close="simulation-dialog"]').click();await p.locator('#new-study').click();await p.locator('#study-name').fill('QA: новый сценарий');await p.locator('#study-form button[type="submit"]').click();await p.locator('button[data-view="experiments"]').click();assert.match(await p.locator('#saved-studies').innerText(),/QA: новый сценарий/);await p.reload();await p.locator('button[data-view="experiments"]').click();assert.match(await p.locator('#saved-studies').innerText(),/QA: новый сценарий/)});
+ await check('All interactions have no page errors',async()=>assert.deepEqual(errors,[]));
+ fs.writeFileSync(path.join(__dirname,'interaction-results.json'),JSON.stringify(results,null,2));
+ console.log(JSON.stringify(results,null,2));await b.close();
+ if(results.some(r=>r.status==='fail'))process.exitCode=1;
+})().catch(e=>{console.error(e);process.exitCode=1});
