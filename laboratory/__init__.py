@@ -1,2 +1,2 @@
 """Personal AI source research laboratory."""
-__version__ = "0.20.0-alpha.1"
+__version__ = "0.20.1-alpha.1"

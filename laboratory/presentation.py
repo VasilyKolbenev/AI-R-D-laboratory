@@ -557,7 +557,7 @@ def _editorial(data, review):
     return data
 
 
-def _story_post(data):
+def _story_post(data, *, compact=False):
     sources=[]
     source_candidates=data.get('publication_sources',[]) if data.get('provenance',{}).get('editorial_version') is not None else [*data.get('publication_sources',[]),*data['sources']]
     for item in source_candidates:
@@ -568,12 +568,19 @@ def _story_post(data):
     budgets = {'problem':330,'audience':330,'mechanism':530,'findings':700,'limitations':430,'resources':330,'takeaway':380}
     labels = {'problem':'ПРОБЛЕМА','audience':'КОМУ ПОЛЕЗНО','mechanism':'КАК РАБОТАЕТ',
               'findings':'ЧТО ПОКАЗАЛИ АВТОРЫ','limitations':'ГРАНИЦЫ','resources':'НАСТРОЙКА И РЕСУРСЫ','takeaway':'ПРАКТИЧЕСКИЙ ВЫВОД'}
-    texts={section['id']:'\n'.join(([data['numeric_note']] if section['id']=='findings' and data.get('numeric_note') else [section['text']] if section.get('text') and section['id']!='findings' else [])+
-                                [('• ' if len(section.get('items',[]))>1 else '')+item for item in section.get('items',[])])
+    numeric_note=data.get('numeric_note','')
+    if compact:
+        labels.update(problem='ЗАДАЧА',audience='КОМУ',mechanism='МЕХАНИЗМ',
+                      findings='У АВТОРОВ',resources='РЕСУРСЫ',takeaway='ВЫВОД')
+        if numeric_note=='Нет сопоставимой пары подтверждённых чисел; известные данные и пробелы показаны в таблице.':
+            numeric_note='Пара чисел не подтверждена.'
+    texts={section['id']:'\n'.join(([numeric_note] if section['id']=='findings' and numeric_note else [section['text']] if section.get('text') and section['id']!='findings' else [])+
+                                [('• ' if not compact and len(section.get('items',[]))>1 else '')+item for item in section.get('items',[])])
            for section in data['story']}
-    attribution='' if 'собственных замеров' in '\n'.join(texts.values()).lower() else 'Результаты авторов; собственных замеров нет.\n\n'
+    attribution='' if 'собственных замеров' in '\n'.join(texts.values()).lower() else ('Своих замеров нет.\n\n' if compact else 'Результаты авторов; собственных замеров нет.\n\n')
     footer=attribution+'Источники\n'+'\n'.join(sources)
-    next_step='С ЧЕГО НАЧАТЬ\n'+data['next_step'] if data.get('next_step') else ''
+    next_label='ШАГ' if compact else 'С ЧЕГО НАЧАТЬ'
+    next_step=next_label+'\n'+data['next_step'] if data.get('next_step') else ''
     full_parts=[*parts,*[labels[section['id']]+'\n'+texts[section['id']] for section in data['story']]]
     if next_step:full_parts.append(next_step)
     full='\n\n'.join(full_parts)+'\n\n'+footer
@@ -581,7 +588,7 @@ def _story_post(data):
     if utf16_len(full)<=POST_LIMIT:return full
     # Budget each complete section, reserving the sources instead of clipping
     # the finished post and accidentally removing its attribution.
-    if next_step:next_step='С ЧЕГО НАЧАТЬ\n'+_limit(data['next_step'],350)
+    if next_step:next_step=next_label+'\n'+_limit(data['next_step'],350)
     remaining = POST_LIMIT - utf16_len('\n\n'.join(parts)+ '\n\n'+footer+'\n\n'+next_step) - 40
     overhead=sum(utf16_len(labels[section['id']])+3 for section in data['story'])
     available=max(100,remaining-overhead)
@@ -677,6 +684,10 @@ def build_presentation(run, review=None):
             (plan.get('research_protocol') or {}).get('assembly_version') == 'compact-editor-v1'):
         from .channel_layout import fit
         layout = fit(data, _story_post, POST_LIMIT)
+        if layout is None:
+            layout = fit(data, lambda value: _story_post(value, compact=True), POST_LIMIT)
+            if layout is not None:
+                layout['metadata']['surface_version']='compact-static-v1'
         if layout is not None:
             data.update(post_text=layout['text'], post_layout=layout['metadata'], post_compacted=False)
     if agent_gate is not None:
