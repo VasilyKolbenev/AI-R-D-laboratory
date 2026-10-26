@@ -17,7 +17,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 OWNER = "vv-frontier-setup-v1"
 MARKER = ".vv-frontier-environment.json"
-VERSIONS = {"Pillow": "12.3.0", "imageio-ffmpeg": "0.6.0", "pypdf": "6.21.2"}
+VERSIONS = {"Pillow": "13.0.0", "imageio-ffmpeg": "0.6.0", "pypdf": "6.21.2"}
 
 
 class SetupError(RuntimeError):
