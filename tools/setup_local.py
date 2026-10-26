@@ -17,7 +17,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 OWNER = "vv-frontier-setup-v1"
 MARKER = ".vv-frontier-environment.json"
-VERSIONS = {"Pillow": "12.3.0", "imageio-ffmpeg": "0.6.0"}
+VERSIONS = {"Pillow": "12.3.0", "imageio-ffmpeg": "0.6.0", "pypdf": "6.21.2"}
 
 
 class SetupError(RuntimeError):
@@ -187,7 +187,7 @@ def finalize(root):
     data.update(state="complete", requirements_sha256=sha(root / "requirements.txt"),
                 dependencies=VERSIONS, encoder_sha256=digest)
     write_json(venv / MARKER, data)
-    print("Verified Pillow, FFmpeg H.264 and this project's environment. No server was started.")
+    print("Verified Pillow, pypdf, FFmpeg H.264 and the project environment. No server was started.")
 
 
 def check(root):

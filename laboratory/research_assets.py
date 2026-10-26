@@ -200,5 +200,6 @@ def validate_backup(db):
             original = {segment['id']: segment for segment in payload['segments']}
             if any(segment != original.get(segment['id']) for segment in document['segments']):
                 raise ValueError('Выдержка в плане отличается от архивного сегмента.')
-    for name in ('research_workbench', 'research_evaluation', 'research_experiments', 'lexical_benchmark'):
+    for name in ('research_workbench', 'research_evaluation',
+                 'research_experiments', 'lexical_benchmark'):
         importlib.import_module('.' + name, __package__).validate_backup(db)

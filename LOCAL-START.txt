@@ -11,7 +11,7 @@ VV Frontier · AI R&D Laboratory v0.20.0-alpha.1
 При нестандартном расположении Python:
 Setup-Laboratory.cmd --python "C:\Path\To\python.exe"
 
-Setup создаёт .venv и загружает Pillow и imageio-ffmpeg из PyPI.
+Setup создаёт .venv и загружает Pillow, pypdf и imageio-ffmpeg из PyPI.
 Он не подключает Telegram, не запускает исследования и не настраивает автозапуск.
 Node.js, Git, права администратора и локальные модели не нужны.
 

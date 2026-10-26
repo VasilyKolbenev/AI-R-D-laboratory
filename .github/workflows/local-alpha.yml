@@ -3,7 +3,6 @@ name: Local Windows alpha
 on:
   push:
     branches: [main, 'release/**']
-    tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch:

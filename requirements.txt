@@ -7,3 +7,6 @@ Pillow==12.3.0 \
 # https://pypi.org/pypi/imageio-ffmpeg/0.6.0/json
 imageio-ffmpeg==0.6.0 \
     --hash=sha256:02fa47c83703c37df6bfe4896aab339013f62bf02c5ebf2dce6da56af04ffc0a
+# https://pypi.org/pypi/pypdf/6.21.2/json
+pypdf==6.21.2 \
+    --hash=sha256:1d44d1a3a200f25062adff0085b02040e4646431ac2ccac22e42679e91466084

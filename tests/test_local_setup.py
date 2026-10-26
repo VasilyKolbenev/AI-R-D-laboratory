@@ -63,7 +63,9 @@ class LocalSetupTests(unittest.TestCase):
                 directory.mkdir(parents=True)
                 (directory / "python.exe").write_bytes(b"TEST_ONLY not executable")
 
-        with patch.dict(os.environ, {"VIRTUAL_ENV": ""}), patch.object(setup, "command", fake_command):
+        with patch.dict(os.environ, {"VIRTUAL_ENV": ""}), \
+                patch.object(setup.sys, "prefix", setup.sys.base_prefix), \
+                patch.object(setup, "command", fake_command):
             setup.install(self.root)
             setup.install(self.root)
         self.assertEqual(len(calls), 5)  # one venv creation, two explicit pip/finalize pairs

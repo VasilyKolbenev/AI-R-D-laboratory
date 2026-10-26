@@ -1,7 +1,14 @@
-/* FIELDWORK. Read-only design study over saved lab data. No dispatch or write route. */
+/* FIELDWORK. Saved lab data and separately approved, bounded local CPU checks. */
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
+  const isWorkingLab = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname.toLowerCase()) && /^\/workbench(?:\/|$)/.test(location.pathname);
+  const labOrigin = isWorkingLab ? location.origin : 'http://127.0.0.1:8795';
+  // Rewrite fallback navigation before any API result, including an empty archive.
+  for (const anchor of document.querySelectorAll('a[href^="http://127.0.0.1:8795/"]')) {
+    const target = new URL(anchor.href);
+    anchor.href = labOrigin + target.pathname + target.search + target.hash;
+  }
   const arr = v => Array.isArray(v) ? v : [];
   const obj = v => v && typeof v === 'object' && !Array.isArray(v) ? v : {};
   const str = (v, max = 2000) => typeof v === 'string' ? v.trim().slice(0, max) : '';
@@ -39,6 +46,20 @@
   function error(value) {const node = $('error-panel'); node.hidden = !value; node.textContent = value || '';}
   function stop() {cancelAnimationFrame(state.frame); state.frame = 0; state.playing = false; if ($('graph-play')) $('graph-play').textContent = 'Показать движение'; const packet = $('graph-stage').querySelector('.graph-packet'); if (packet) packet.setAttribute('opacity', '0');}
   function clearSelection() {state.selected = null; stop();}
+  function emptyStudy() {
+    clearSelection();state.graph=null;
+    $('study-title').textContent='Исследований пока нет';
+    $('study-summary').textContent='Добавьте материал в рабочей лаборатории. CPU-проверка доступна отдельно в «Экспериментах».';
+    $('study-status').textContent='История пуста';$('study-date').textContent='—';
+    $('study-verdict').textContent='Сохранённого вывода пока нет.';
+    $('graph-title').textContent='Начните с материала';$('graph-meta').textContent='';
+    $('graph-caption').textContent='План и бюджет исследования появятся до вашего апрува.';
+    replace('graph-stage',paragraph('Отправьте материал боту или добавьте его во входящие.'));
+    for(const id of ['readiness-summary','phase-track','usage-track','memory-track','queue-track'])replace(id);
+    for(const b of $('lens-tabs').querySelectorAll('button'))b.disabled=true;
+    $('graph-play').disabled=true;$('graph-step').disabled=true;
+    replace('inspector',paragraph('Выберите сохранённое исследование, когда оно появится.'));
+  }
   function titleInspector(kicker, title, ...content) {replace('inspector', el('p', kicker, 'eyebrow'), el('h2', title), ...content);}
   function phaseRecord(role) {
     const run = state.run || {}, current = arr(run.agent_pipeline?.phases).find(x => x.role === role), saved = arr(run.plan?.continuation?.prefix).find(x => x.role === role), reused = arr(run.agent_pipeline?.reused_phases).find(x => x.role === role);
@@ -254,19 +275,20 @@
   async function setSpace(space) {
     if(!['study','knowledge','compare','validation','benchmarks'].includes(space))return;
     stop();state.space=space;const library=space!=='study';
-    const controlled=space==='benchmarks'&&location.origin==='http://127.0.0.1:8795';
+    const controlled=space==='benchmarks'&&isWorkingLab;
     $('mode-notice').textContent=controlled?'CPU-проверка · один прогон после подтверждения · без моделей и API':'Режим чтения · сохранённые данные · без запусков';
     $('connection-status').textContent=controlled?'Точный план перед CPU-запуском':'Ваши сохранённые данные · только чтение';
     document.querySelector('.rail-footnote').textContent=controlled?'Контролируемый CPU-прогон после подтверждения.':'Только чтение локальных результатов.';
     if(space!=='benchmarks'){clearTimeout(benchmarkTimer);benchmarkTimer=null;benchmarkInstance?.destroy?.();benchmarkInstance=null;}
-    document.querySelector('.reading-field').hidden=library;document.querySelector('.paper-panel').hidden=library;document.querySelector('.record-strip').hidden=library;$('library-workspace').hidden=!library;
+    if(!state.run&&space==='study')emptyStudy();
+    document.querySelector('.reading-field').hidden=library;document.querySelector('.paper-panel').hidden=library||!state.run;document.querySelector('.record-strip').hidden=library||!state.run;$('library-workspace').hidden=!library;
     for(const b of $('space-tabs').querySelectorAll('button')){if(b.dataset.space===space)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');}
     if(space==='benchmarks'){libraryInstance?.destroy?.();libraryInstance=null;paintBenchmark();try{await loadBenchmarkData();paintBenchmark();}catch(e){error('CPU-проверки недоступны: '+e.message);}}
     else if(library){paintLibrary();await Promise.all([loadLibrary(),loadResearch()]);if(space==='compare')await compareReports();paintLibrary();}
     else libraryInstance?.destroy?.();
   }
   async function benchmarkPost(action,body) {
-    if(location.origin!=='http://127.0.0.1:8795')throw new Error('Подтвердите запуск в рабочей лаборатории на порту 8795.');
+    if(!isWorkingLab)throw new Error('Подтвердите запуск в рабочей локальной лаборатории.');
     if(!['prepare','start'].includes(action))throw new Error('Неизвестное действие CPU-проверки.');
     const bootstrap=await fetch('/api/bootstrap',{method:'GET',credentials:'same-origin',cache:'no-store'});
     if(!bootstrap.ok)throw new Error('Не удалось прочитать локальный токен подтверждения.');
@@ -291,7 +313,7 @@
     if(state.space!=='benchmarks')return;
     if(!window.FrontierBenchmark?.mount){replace('library-workspace',paragraph('Компонент CPU-проверки не загрузился.'));return;}
     const selected=benchmarkState.selected;
-    const options={plans:benchmarkState.plans,selected,readOnly:location.origin!=='http://127.0.0.1:8795',onPreviewLinkURL:'http://127.0.0.1:8795/workbench/#benchmarks',
+    const options={plans:benchmarkState.plans,selected,readOnly:!isWorkingLab,onPreviewLinkURL:labOrigin+'/workbench/#benchmarks',
       onPrepare:async()=>{const plan=await benchmarkPost('prepare',{});await loadBenchmarkData(plan.plan_id);return benchmarkState.selected;},
       onStart:async(plan_id,plan_hash)=>{const command_id='cpu-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(16).slice(2));const started=await benchmarkPost('start',{plan_id,plan_hash,consent:true,command_id});benchmarkState.selected={...benchmarkState.selected,...started};benchmarkUntil=Date.now()+195000;benchmarkPoll();return benchmarkState.selected;},
       onRefresh:async id=>{const result=await loadBenchmarkData(id);if(benchmarkState.selected?.status==='running'){benchmarkUntil=Math.max(benchmarkUntil,Date.now()+15000);benchmarkPoll();}return result;}};
@@ -307,10 +329,11 @@
   }
   function render() {
     const run=state.run,p=state.p||{};
+    for(const b of $('lens-tabs').querySelectorAll('button'))b.disabled=false;
     $('study-title').textContent=str(p.title)||shortTitle(run);$('study-summary').textContent=str(p.summary,500)||'Данные выбранного плана. Готовый разбор ещё не сохранён.';
     $('study-status').textContent=labels[run.status]||'Статус не установлен';$('study-date').textContent=date(run.finished_at||run.created_at);
     $('study-verdict').textContent=str(p.public_takeaway||p.verdict,1200)||'Прикладной вывод ещё не сохранён.';
-    const target='http://127.0.0.1:8795/?run='+encodeURIComponent(run.id);$('open-lab').href=target;$('open-report').href=target;$('open-evidence').href=target+'&mode=evidence';
+    const target=labOrigin+'/?run='+encodeURIComponent(run.id);$('open-lab').href=target;$('open-report').href=target;$('open-evidence').href=target+'&mode=evidence';
     $('workspace').hidden=false;renderTracks();renderLens();renderReadiness();setSpace(state.space);loadResearch();
   }
   async function select(id, refresh=false) {
@@ -326,9 +349,18 @@
   async function start(refresh=false) {
     $('connection-status').textContent='Читаем сохранённые исследования…';error('');
     try{const results=await Promise.allSettled([api('/api/runs'),api('/api/publication')]);if(results[0].status!=='fulfilled')throw results[0].reason;const old=state.run?.id;state.runs=arr(results[0].value.items);state.queue=results[1].status==='fulfilled'?results[1].value:null;$('count-runs').textContent=String(state.runs.length);const selectEl=$('research-select');selectEl.replaceChildren();for(const run of state.runs){const option=el('option',shortTitle(run)+' · '+(labels[run.status]||run.status));option.value=run.id;selectEl.append(option);}
-      if(!state.runs.length){state.run=null;state.p=null;stop();$('loading-panel').hidden=true;$('workspace').hidden=true;error('Сохранённых исследований пока нет. Добавьте материал в действующей лаборатории.');$('connection-status').textContent='История пуста';return;}
+      if(!state.runs.length){
+        ++state.epoch;state.abort?.abort();state.run=null;state.p=null;
+        state.research=null;state.quality=null;state.loading=false;
+        state.knowledge=null;state.workspace=null;cache.clear();researchReads.clear();
+        selectEl.disabled=true;selectEl.append(el('option','Исследований пока нет'));
+        emptyStudy();$('loading-panel').hidden=true;$('workspace').hidden=false;error('');
+        if(state.space==='study')state.space='knowledge';
+        await setSpace(state.space);return;
+      }
+      selectEl.disabled=false;
       const id=state.runs.find(r=>r.id===old)?.id||state.runs.find(r=>r.status==='completed')?.id||state.runs[0].id;selectEl.value=id;await select(id,refresh);
-    }catch(e){state.run=null;state.p=null;state.quality=null;state.research=null;stop();$('workspace').hidden=true;$('loading-panel').hidden=true;error('Лаборатория на порту 8795 недоступна. '+e.message);$('connection-status').textContent='Нет подключения к лаборатории';}
+    }catch(e){state.run=null;state.p=null;state.quality=null;state.research=null;stop();$('workspace').hidden=true;$('loading-panel').hidden=true;error('Рабочая лаборатория недоступна. '+e.message);$('connection-status').textContent='Нет подключения к лаборатории';}
   }
   $('research-select').addEventListener('change',e=>select(e.target.value));$('refresh-button').addEventListener('click',()=>{state.knowledge=null;state.workspace=null;start(true);});
   for(const b of $('space-tabs').querySelectorAll('button'))b.addEventListener('click',()=>setSpace(b.dataset.space));
@@ -336,6 +368,6 @@
   $('lens-tabs').addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;const buttons=[...$('lens-tabs').querySelectorAll('button')],index=buttons.indexOf(document.activeElement);if(index<0)return;e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?buttons.length-1:(index+(e.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;buttons[next].focus();buttons[next].click();});
   $('graph-step').addEventListener('click',nextEdge);$('graph-play').addEventListener('click',animate);
   document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();clearTimeout(benchmarkTimer);benchmarkTimer=null;}else benchmarkPoll();});window.addEventListener('pagehide',()=>{stop();clearTimeout(benchmarkTimer);});
-  window.FrontierFieldwork={snapshot:()=>({runId:state.run?.id||null,lens:state.lens,space:state.space,loading:state.loading,playing:state.playing,evidenceCount:arr(state.p?.evidence).length,readiness:state.research?.readiness?.stage||null,benchmarkId:benchmarkState.selected?.plan_id||null,benchmarkStatus:benchmarkState.selected?.status||null,readOnly:state.space!=='benchmarks'||location.origin!=='http://127.0.0.1:8795'})};
+  window.FrontierFieldwork={snapshot:()=>({runId:state.run?.id||null,lens:state.lens,space:state.space,loading:state.loading,playing:state.playing,evidenceCount:arr(state.p?.evidence).length,readiness:state.research?.readiness?.stage||null,benchmarkId:benchmarkState.selected?.plan_id||null,benchmarkStatus:benchmarkState.selected?.status||null,readOnly:state.space!=='benchmarks'||!isWorkingLab})};
   start();
 })();
