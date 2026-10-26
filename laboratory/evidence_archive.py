@@ -26,7 +26,9 @@ MAX_TEXT_CHARS = 96_000
 MAX_PDF_PAGES = 20
 MAX_BUNDLE_CHARS = 48_000
 MAX_BUNDLE_DOCUMENT_CHARS = 6000
-PARSER_VERSION = 'inert-extract-v1'
+LEGACY_PARSER_VERSION = 'inert-extract-v1'
+PARSER_VERSION = 'inert-extract-v2'
+PARSER_VERSIONS = (LEGACY_PARSER_VERSION, PARSER_VERSION)
 STATUSES = {'captured', 'partial', 'unparseable', 'unsupported', 'failed', 'blocked'}
 KINDS = {'supplied_text', 'fetched_html', 'fetched_pdf', 'fetched_other'}
 NOTICE = ('Хеш фиксирует сохранённые байты, а не подлинность издателя. '
@@ -315,6 +317,7 @@ def _pdf_pages(raw, segments):
 
 
 def _extract(raw, kind, content_type):
+    """The v1 extractor stays unchanged for historical captures."""
     segments = _Segments()
     limitations = []
     try:
@@ -349,6 +352,85 @@ def _extract(raw, kind, content_type):
     return segments.rows, 'partial' if segments.partial else 'captured', limitations
 
 
+class _GitHubReadme(HTMLParser):
+    """Forward only a repository's rendered README article to the inert parser."""
+    def __init__(self, segments):
+        super().__init__(convert_charrefs=True)
+        self.parser = _HTML(segments)
+        self.found, self.depth = False, 0
+
+    def handle_starttag(self, tag, attrs):
+        if self.depth:
+            if tag == 'article':
+                self.depth += 1
+            self.parser.handle_starttag(tag, attrs)
+        elif not self.found and tag == 'article':
+            classes = dict(attrs).get('class') or ''
+            if 'markdown-body' in classes.split():
+                self.found, self.depth = True, 1
+
+    def handle_endtag(self, tag):
+        if not self.depth:
+            return
+        if tag == 'article':
+            self.depth -= 1
+            if not self.depth:
+                self.parser.flush()
+                return
+        self.parser.handle_endtag(tag)
+
+    def handle_data(self, data):
+        if self.depth:
+            self.parser.handle_data(data)
+
+
+def _github_repository(url):
+    parts = urlsplit(url)
+    return (parts.hostname or '').casefold() == 'github.com' and bool(
+        re.fullmatch(r'/[^/]+/[^/]+/?', parts.path))
+
+
+def _extract_versioned(raw, kind, content_type, parser_version, url=''):
+    """Capture/new-plan extraction only; restore never runs extraction."""
+    if parser_version == LEGACY_PARSER_VERSION:
+        return _extract(raw, kind, content_type)
+    if parser_version != PARSER_VERSION:
+        raise ValueError('Неподдерживаемая версия извлечения источника.')
+    if kind != 'fetched_html' or not _github_repository(url):
+        return _extract(raw, kind, content_type)
+    segments, limitations = _Segments(), []
+    charset = 'utf-8'
+    match = re.search(r'charset\s*=\s*["\']?([A-Za-z0-9_-]+)', content_type)
+    if match:
+        charset = match.group(1)
+    try:
+        text = raw.decode(charset, errors='strict')
+    except (LookupError, UnicodeError):
+        text = raw.decode('utf-8', errors='replace')
+        limitations.append('Неизвестная/ошибочная кодировка: UTF-8 с заменой символов.')
+    try:
+        parser = _GitHubReadme(segments)
+        parser.feed(text); parser.close(); parser.parser.flush()
+    except Exception:
+        return [], 'unparseable', ['Не удалось безопасно извлечь текст; байты сохранены.']
+    if not parser.found:
+        rows, status, notes = _extract(raw, kind, content_type)
+        return rows, status, notes + [
+            'GitHub: README article.markdown-body не найден; общий HTML-разбор.']
+    limitations.append(
+        'GitHub: извлечён README article.markdown-body; навигация страницы исключена.')
+    if parser.depth:
+        segments.partial = True
+        limitations.append('Закрытие README article не найдено в сохранённых байтах.')
+    if not segments.rows:
+        return [], 'unparseable', limitations + ['Текстовые сегменты не извлечены.']
+    for row in segments.rows:
+        row['locator'] = 'github:readme:' + row['locator']
+    if segments.partial:
+        limitations.append('Достигнута граница страниц/сегментов/текста; показана часть.')
+    return segments.rows, 'partial' if segments.partial else 'captured', limitations
+
+
 def validate_asset(kind, payload):
     """Pure validation: restore never fetches, imports a parser or reparses bytes."""
     if kind != 'source_capture':
@@ -361,7 +443,7 @@ def validate_asset(kind, payload):
     if (payload['version'] != 'source-capture-v1' or payload['kind'] not in KINDS
             or payload['status'] not in STATUSES
             or payload['origin'] not in {'supplied', 'fetched'}
-            or payload['parser_version'] != PARSER_VERSION):
+            or payload['parser_version'] not in PARSER_VERSIONS):
         raise ValueError('Неверные версия, происхождение или статус захвата.')
     for key, limit in [('source_id', 100), ('content_type', 200),
                        ('retrieved_at', 50), ('raw_b64', (MAX_BYTES + 2) // 3 * 4)]:
@@ -512,7 +594,9 @@ class Archive:
                 raw = b''; payload['status'] = 'blocked'
                 payload['limitations'] = ['Возможные учётные данные: байты не сохранялись.']
             else:
-                segments, status, notes = _extract(raw, payload['kind'], payload['content_type'])
+                segments, status, notes = _extract_versioned(
+                    raw, payload['kind'], payload['content_type'],
+                    payload['parser_version'], payload['url'])
                 payload.update(segments=segments, status=status, limitations=notes)
         if denied and not fetch:
             payload['limitations'].append('Закрытый/секретный URL исключён из архива.')
@@ -521,6 +605,32 @@ class Archive:
         payload.update(raw_b64=base64.b64encode(raw).decode('ascii'), sha256=_sha(raw))
         validate_asset('source_capture', payload)
         return self.assets.put('source_capture', payload)
+
+    def _reproject_cached(self, asset):
+        """Append a local README projection only while preparing a new bundle."""
+        asset = self.get(asset['id'])
+        payload = asset['payload']
+        if (payload['parser_version'] != LEGACY_PARSER_VERSION
+                or payload['origin'] != 'fetched' or payload['kind'] != 'fetched_html'
+                or payload['status'] not in {'captured', 'partial'}
+                or not _github_repository(payload['url'])):
+            return asset
+        segments, status, notes = _extract_versioned(
+            base64.b64decode(payload['raw_b64']), payload['kind'], payload['content_type'],
+            PARSER_VERSION, payload['url'])
+        if not segments or any(not row['locator'].startswith('github:readme:')
+                               for row in segments):
+            return asset
+        copied = deepcopy(payload)
+        copied.update(parser_version=PARSER_VERSION, segments=segments, status=status,
+                      previous_asset_id=asset['id'], limitations=notes + [
+                          'Повторное локальное извлечение сохранённых байтов без HTTP; '
+                          'дата получения оригинала сохранена.'])
+        if payload['url'].startswith('http:'):
+            copied['limitations'].append(
+                'HTTP без TLS: подлинность сервера не подтверждена.')
+        validate_asset('source_capture', copied)
+        return self.assets.put('source_capture', copied)
 
     def prepare(self, sources, fetch=False):
         if not isinstance(sources, list) or not 1 <= len(sources) <= 6:
@@ -537,7 +647,7 @@ class Archive:
                     continue
                 if not cached:
                     attempts += 1
-                captured = self.capture(source, fetch=True)
+                captured = self._reproject_cached(self.capture(source, fetch=True))
                 previous_id = captured['payload']['previous_asset_id']
                 previous = self.get(previous_id) if previous_id else None
                 documents.append(document(captured, previous))

@@ -30,6 +30,42 @@ def plain_render(data):
 
 
 class ChannelLayoutTests(unittest.TestCase):
+    def test_compact_surface_keeps_required_prose_and_numeric_conditions_whole(self):
+        def paragraph(label, size):
+            return ('TEST_ONLY ' + label + ' ').ljust(size, 'x')
+
+        first = paragraph('claimed 7 same conditions', 300)
+        data = sample([first, paragraph('optional', 300), paragraph('optional', 300)])
+        data['title'] = paragraph('technology', 80)
+        data['next_step'] = paragraph('next step', 250)
+        data['numeric_note'] = ('Нет сопоставимой пары подтверждённых чисел; '
+                                'известные данные и пробелы показаны в таблице.')
+        story = data['story']
+        story[0]['text'] = paragraph('problem', 250)
+        story[1].update(text=paragraph('audience', 200), items=[paragraph('baseline', 250)])
+        story[2]['items'] = [paragraph('mechanism', 60)] * 3
+        story[4]['items'] = [paragraph('caveat', 300)] * 3
+        story[5]['items'] = [paragraph('resource', 300)] * 2
+        story[6]['text'] = paragraph('conclusion', 300)
+        original = deepcopy(data)
+        self.assertIsNone(fit(data, _story_post, 3500))
+        result = fit(data, lambda item: _story_post(item, compact=True), 3500)
+        self.assertIsNotNone(result)
+        self.assertLessEqual(utf16_len(result['text']), 3500)
+        self.assertNotIn('…', result['text'])
+        self.assertIn(first, result['text'])
+        for section in data['story']:
+            if section['id'] == 'findings':
+                continue
+            if section['text']:
+                self.assertIn(section['text'], result['text'])
+            for item in section.get('items', []):
+                self.assertIn(item, result['text'])
+        self.assertIn('https://example.org/primary', result['text'])
+        self.assertEqual(data, original)
+        data['story'][0]['text'] += 'Cannot drop this condition. ' * 20
+        self.assertIsNone(fit(data, lambda item: _story_post(item, compact=True), 3500))
+
     def test_whole_optional_findings_removed_without_mutating_original(self):
         first, optional, numeric = 'First full result.', 'Optional detail. ' * 30, 'Value is 7.'
         data = sample([first, optional, numeric])

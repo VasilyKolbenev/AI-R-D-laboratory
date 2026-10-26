@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.20.1-alpha.1 · 2026-10-26
+
+- GitHub repository captures prioritize the README instead of page navigation.
+  A new plan may re-extract cached original bytes without HTTP; existing captures,
+  plans, reports and their provenance remain unchanged.
+- Long channel drafts try a compact surface with shorter static labels and notices.
+  Required model paragraphs, numeric conditions, sources and the 3500 UTF-16 limit
+  remain intact. A genuinely oversized mandatory body still blocks publication.
+- The first maintainer pilot exposed both defects. Corrected extraction does not
+  retroactively turn its saved qualitative report into a measured comparison.
+
 ## v0.20.0-alpha.1 · 2026-10-26
 
 First packaged Windows x64 local alpha of the working personal laboratory.
