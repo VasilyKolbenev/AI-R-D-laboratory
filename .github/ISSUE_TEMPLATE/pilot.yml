@@ -1,0 +1,31 @@
+name: Pilot feedback
+description: Share installation time, usefulness, and friction in the local alpha.
+body:
+  - type: markdown
+    attributes:
+      value: A model study is optional and requires your explicit plan approval. Share aggregate observations, never tokens, private materials, prompts or raw databases.
+  - type: input
+    id: installation
+    attributes:
+      label: Version, Windows / Python version, installation minutes
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: What useful decision could you make? Where did you get stuck?
+      description: Include first-use minutes and whether you needed help. No research subject details are required.
+    validations:
+      required: true
+  - type: textarea
+    id: cost
+    attributes:
+      label: Approval and spending transparency
+      description: Was the plan, provider and budget clear? Was any cost unknown? A free demo is a valid pilot result; do not initiate a paid run for this form.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed secrets and private research content.
+          required: true

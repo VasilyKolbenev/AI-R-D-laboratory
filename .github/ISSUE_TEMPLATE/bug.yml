@@ -1,0 +1,28 @@
+name: Local alpha bug
+description: Report a reproducible local installation or workflow problem.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not attach tokens, logins, private articles, full prompts, or raw database files. Redact screenshots and logs.
+  - type: input
+    id: version
+    attributes:
+      label: Release version and Windows / Python version
+      placeholder: v0.20.0-alpha.1 / Windows 11 x64 / Python 3.12
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps and expected / actual result
+      description: A short public or synthetic example is enough.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed secrets and private research content.
+          required: true

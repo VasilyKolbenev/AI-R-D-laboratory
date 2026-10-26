@@ -8,3 +8,5 @@
 *.svg text eol=lf
 *.txt text eol=lf
 *.png binary
+# Keep the bundled upstream license byte-for-byte, including its whitespace.
+deliverables/ui/frontier-instrument/fonts/OFL.txt -whitespace

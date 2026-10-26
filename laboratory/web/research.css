@@ -1,0 +1,43 @@
+.research-workbench,.research-run{min-width:0;margin:22px 0}
+.research-section{padding:20px;margin:18px 0;border:1px solid #3b4b5e;
+  border-radius:12px;background:#121e2a;min-width:0}
+.research-section h3{font-size:19px;line-height:1.5;margin:0 0 12px}
+.research-section h4{font-size:14px;line-height:1.6;margin:0 0 10px;overflow-wrap:anywhere}
+.research-section h5{font-size:12px;margin:15px 0 8px}
+.research-note{font-size:12px;line-height:1.8;color:var(--muted,#b8c7d2);
+  overflow-wrap:anywhere;margin:10px 0}
+.research-state{display:inline-block;font-size:11px;padding:6px 9px;background:#283b4a;
+  border:1px solid #526c7b;border-radius:6px;line-height:1.6}
+.research-source,.research-metric,.research-evidence{padding:16px 0;
+  border-top:1px solid #344659;min-width:0}
+.research-detail{margin:15px 0;min-width:0}
+.research-detail>summary{font-size:12px;line-height:1.8;color:#d0c7ed;cursor:pointer}
+.research-json,.research-quote{white-space:pre-wrap;overflow-wrap:anywhere;
+  font:11px/1.8 Consolas,monospace;color:#d4dfeb;background:#0c1520;
+  padding:14px;border-radius:8px;max-height:460px;overflow:auto;margin:12px 0}
+.research-quote{font-family:inherit;border-left:2px solid #6785a0}
+.research-warning{font-size:12px;line-height:1.8;padding:12px;color:#f2cea4;
+  background:#35291e;border-left:3px solid #d0a66d;overflow-wrap:anywhere}
+.research-form{display:grid;gap:13px;margin:20px 0;min-width:0;
+  border-top:1px solid #3b4b5e;padding-top:17px}
+.research-field{display:grid;gap:7px;font-size:12px;line-height:1.7;min-width:0}
+.research-field input,.research-field textarea,.research-field select{width:100%;
+  min-width:0;max-width:100%;box-sizing:border-box;font:12px/1.7 inherit}
+.research-field textarea{font:12px/1.7 Consolas,monospace;resize:vertical}
+.research-consent{display:flex;gap:11px;align-items:flex-start;margin:17px 0;
+  font-size:12px;line-height:1.8;overflow-wrap:anywhere}
+.research-consent input{flex:0 0 auto;width:16px;margin-top:5px}
+.research-section .button{font-size:12px;line-height:1.6;white-space:normal;
+  max-width:100%;justify-self:start;height:auto;overflow-wrap:anywhere}
+.research-section .text-button{display:inline-block;margin:12px 18px 0 0}
+.research-english{font-size:14px;color:#d7e7e5;line-height:1.8}
+.research-experiment-approval{padding:0 15px;border-left:3px solid #8872aa}
+@media(max-width:650px){
+  .research-section{padding:14px;margin:15px 0}
+  .research-section h3{font-size:17px}
+  .research-section .button{width:100%;font-size:11px}
+  .research-note,.research-field,.research-consent{font-size:11px}
+  .research-field input,.research-field textarea,.research-field select{font-size:16px}
+  .research-json,.research-quote{font-size:10px;padding:11px}
+  .research-experiment-approval{padding:0 10px}
+}

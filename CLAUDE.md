@@ -1,28 +1,25 @@
-# AI R&D Laboratory
+# AI R&D Laboratory — contributor guidance
 
-The user is the product owner. Claude Code is the implementation developer. Codex is the technical lead and reviewer. The user manually transfers task briefs and review results between them.
+Read `AGENTS.md`, `README.md`, and the task supplied by the owner before changing
+code. These instructions apply to either coding agent; no second agent or paid
+model invocation is required to develop the project.
 
-## Accepted direction
+The current product is a local, single-owner Windows alpha. `laboratory/`
+contains the implementation. `deliverables/ui/frontier-instrument/` contains the
+live workbench. Earlier architecture and interface proposals in `deliverables/`
+are historical design material, not promises about the current runtime.
 
-- Deliver a private alpha, targeting 4–5 weeks from implementation kickoff. This is a target, not measured capacity or a release guarantee.
-- Keep all alpha acceptance gates G0–G7. A missing gate changes the forecast; it must not be silently removed.
-- Constellation v2 is the approved UI direction. The HTML is a synthetic prototype, not an implemented application backend.
-- The planned alpha includes three executable method packs: DecisionStructure, MemoryRetrieval and ToolUseRecovery. The larger technology catalog does not imply executors for every category.
+Preserve immutable plans, approvals, evidence, usage records and publication
+packages. Opening the application, running tests, installing dependencies or
+preparing a release must never approve a study or publish a Telegram post.
+Unknown external outcomes must not trigger automatic paid retries.
 
-## Read before implementation
+Use synthetic `TEST_ONLY` fixtures for tests. A source review is not an executed
+technology benchmark. The fixed lexical CPU runner validates only its declared
+retrieval task and dataset. Do not infer production isolation or scientific
+truth from passing software tests.
 
-1. The specific current task supplied by the user. Initial brief: `deliverables/docs/claude-task-001.html`.
-2. `deliverables/docs/implementation-plan.html`, especially scope, invariants, stages, schedule and release gates.
-3. `deliverables/docs/architecture.html` and the relevant contracts in `deliverables/architecture/`.
-4. `deliverables/architecture/alpha-acceptance.json` for requirement IDs and expected acceptance evidence.
-5. `deliverables/ui/03-constellation.html` when implementing UI. Preserve the approved reference artifact.
-
-## Execution and review
-
-Work on the assigned bounded task, respecting existing changes. Before changing shared contracts, explain the reason and record an ADR for technical review. Do not implement the entire roadmap in one task. Later explicit user instructions take precedence over this workflow.
-
-Keep synthetic fixtures separate from measured provider results. Product approvals must bind to an immutable plan version and budget. Provider timeouts with an unknown external outcome must not trigger an automatic paid duplicate. Preserve raw evidence, including failures and partial runs.
-
-TASK-001 uses a deterministic fake provider and must require neither credentials nor paid calls. For later real pilots, use only the budget and scope explicitly authorized by the user. Do not put secrets into source, task reports or operational logs.
-
-Return a concise handoff with changed files, exact reproduction commands, actual test outcomes, known limitations, proposed contract changes and any pending dependency. Do not label a gate accepted based solely on your own implementation report; Codex reviews the code and evidence, and the user evaluates product usefulness. A green unit test does not establish production sandbox isolation, billing reconciliation or full end-to-end readiness.
+Before publishing, run the release checks described in `CONTRIBUTING.md` and
+build a clean archive using `tools/build_local_release.py`. Never add runtime
+databases, tokens, CLI authentication, owner research or local operation logs.
+Report actual checks, remaining limitations, and any change to a public contract.

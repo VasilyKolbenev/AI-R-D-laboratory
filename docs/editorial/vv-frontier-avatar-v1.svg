@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">VV Frontier — эскиз знака</title>
+  <desc id="desc">Две сходящиеся V над линией горизонта и восходящая траектория. Белый и ледяной голубой на графите.</desc>
+  <rect width="1024" height="1024" fill="#0C1017"/>
+  <path d="M152 704 H872" fill="none" stroke="#344454" stroke-width="4"/>
+  <path d="M174 748 C388 704 669 600 860 314" fill="none" stroke="#94DEFA" stroke-width="12" stroke-linecap="round"/>
+  <path d="M172 318 L331 652 L490 318" fill="none" stroke="#F0F3F5" stroke-width="63" stroke-linejoin="miter"/>
+  <path d="M529 318 L688 652 L847 318" fill="none" stroke="#94DEFA" stroke-width="63" stroke-linejoin="miter"/>
+  <circle cx="860" cy="314" r="16" fill="#F0F3F5"/>
+</svg>

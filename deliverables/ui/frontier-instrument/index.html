@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#181818">
+  <meta name="description" content="Исследовательский стол VV Frontier: механизм технологии, сопоставимые измерения, память и происхождение выводов.">
+  <title>VVFRONTIER — исследовательский инструмент</title>
+  <link rel="icon" href="icons.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="instrument.css">
+  <link rel="stylesheet" href="library.css">
+  <link rel="stylesheet" href="benchmark.css">
+  <script src="benchmark.js" defer></script>
+  <script src="library.js" defer></script>
+  <script src="instrument.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#study-title">К исследованию</a>
+  <header class="masthead">
+    <a class="wordmark" href="http://127.0.0.1:8795/" aria-label="VVFRONTIER — открыть лабораторию"><svg viewBox="0 0 28 26" aria-hidden="true"><path d="M1 2 9 23 14 10 19 23 27 2M9 23 14 2 19 23" fill="none" stroke="currentColor" stroke-width="2"/></svg>VVFRONTIER<span class="brand-divider" aria-hidden="true"></span><span class="product-mark">FIELDWORK / 01</span></a>
+    <div class="connection-tools"><span id="connection-status" role="status"><span class="status-dot"></span>Подключение</span><button id="refresh-button" class="icon-button" type="button" aria-label="Обновить сохранённые данные" title="Обновить данные"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M5.4 7a7.5 7.5 0 0 1 12-2L20 8M4 16l2.6 3a7.5 7.5 0 0 0 12-2"/></svg></button></div>
+  </header>
+  <div class="concept-warning"><span class="concept-square" aria-hidden="true"></span><span id="mode-notice">Режим чтения · сохранённые данные · без запусков</span><a id="open-lab" href="http://127.0.0.1:8795/">Открыть лабораторию <span aria-hidden="true">↗</span></a></div>
+
+  <div id="loading-panel" class="loading-panel" role="status" aria-live="polite"><span class="eyebrow">Чтение локального архива</span><p>Собираем поле исследования<span class="loading-dot" aria-hidden="true">.</span></p><div class="loading-line"></div><div class="loading-line short"></div></div>
+  <div id="error-panel" class="error-panel" role="alert" hidden></div>
+
+  <main id="workspace" hidden>
+    <section class="workbench-header" aria-label="Рабочая область">
+      <div><span class="eyebrow">Материал → проверка → знание</span><h2>Исследовательский стол</h2></div>
+      <div id="workspace-summary" class="workspace-summary" role="status"></div>
+    </section>
+
+    <div class="bench">
+      <aside class="study-rail" aria-label="Архив исследований">
+        <div class="rail-topline"><span class="eyebrow">Материал</span><span class="rail-coordinate" aria-hidden="true">A—01</span></div>
+        <label for="research-select">Сохранённое<br>исследование</label>
+        <div class="select-wrap"><select id="research-select" aria-label="Сохранённое исследование"><option value="">Чтение архива…</option></select><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></div>
+        <nav id="space-tabs" class="space-tabs" aria-label="Разделы лаборатории"><button type="button" data-space="study" aria-current="page">01 <span>Исследование</span></button><button type="button" data-space="knowledge">02 <span>База знаний</span></button><button type="button" data-space="compare">03 <span>Сравнить</span></button><button type="button" data-space="validation">04 <span>Проверка</span></button><button type="button" data-space="benchmarks">05 <span>Эксперименты</span></button></nav>
+        <div class="rail-count"><span id="count-runs" class="numeric">—</span><span>запусков<br>в архиве</span></div>
+        <div class="rail-hairline" aria-hidden="true"></div>
+        <div class="rail-section"><span class="eyebrow">Состояние</span><span id="study-status" class="tag">—</span><span id="study-date" class="rail-date numeric">—</span></div>
+        <div class="rail-links"><a id="open-report" data-open="report" href="http://127.0.0.1:8795/" target="_blank" rel="noopener">Рабочий интерфейс <span aria-hidden="true">↗</span></a><a id="open-evidence" data-open="evidence" href="http://127.0.0.1:8795/" target="_blank" rel="noopener">Обсерватория <span aria-hidden="true">↗</span></a></div>
+        <p class="rail-footnote">Только чтение<br>локальных результатов.</p>
+      </aside>
+
+      <section class="reading-field" aria-labelledby="study-title">
+        <header class="study-heading"><div class="study-heading-top"><span class="eyebrow">Выбранное исследование</span><span class="field-coordinate numeric" aria-hidden="true">[ 01 / 03 ]</span></div><h1 id="study-title">Чтение исследования</h1><p id="study-summary" class="study-summary"></p><div id="readiness-summary" class="readiness-summary"></div></header>
+        <div class="reading-controls"><div id="lens-tabs" class="lens-tabs" role="tablist" aria-label="Способ чтения исследования"><button type="button" role="tab" aria-selected="true" aria-controls="graph-stage" data-lens="mechanism"><span class="tab-index numeric">01</span>Как работает</button><button type="button" role="tab" aria-selected="false" aria-controls="graph-stage" data-lens="comparison" tabindex="-1"><span class="tab-index numeric">02</span>Что лучше</button><button type="button" role="tab" aria-selected="false" aria-controls="graph-stage" data-lens="evidence" tabindex="-1"><span class="tab-index numeric">03</span>На чём основано</button></div></div>
+        <section class="diagram-surface" aria-labelledby="graph-title"><div class="diagram-topline"><div><span class="eyebrow">Оптика исследования</span><h2 id="graph-title">Как устроен результат</h2></div><span id="graph-meta" class="graph-meta numeric"></span></div><div class="diagram-ruler" aria-hidden="true"><span>СОХРАНЁННЫЕ СВЯЗИ</span><span>·</span><span>·</span><span>·</span><span>ПОЛЕ ИССЛЕДОВАНИЯ</span></div><div id="graph-stage" class="graph-stage" role="tabpanel" tabindex="0" aria-label="Интерактивная схема исследования"></div><div class="diagram-bottomline"><p id="graph-caption" class="graph-caption"></p><div class="graph-transport"><button id="graph-play" type="button" class="transport-button" aria-label="Показать последовательность"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m5 3 8 5-8 5Z"/></svg><span>По шагам</span></button><button id="graph-step" type="button" class="icon-button" aria-label="Следующий шаг" title="Следующий шаг"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 4 8 6-8 6ZM15 4v12"/></svg></button></div></div></section>
+      </section>
+
+      <aside class="paper-panel" aria-label="Детали выбранного материала"><div class="paper-mast"><span class="eyebrow">Под лупой</span><span aria-hidden="true">↙</span></div><div id="inspector" class="inspector" tabindex="-1"><span class="eyebrow">Выберите элемент схемы</span><h2>Ближе к сути.</h2><p class="muted">Связи, основания и ограничения выбранного элемента появятся здесь.</p></div><details class="paper-verdict"><summary>Прикладной вывод</summary><div id="study-verdict" class="study-verdict">—</div></details><div class="paper-registration" aria-hidden="true"><span>VVF / FIELD NOTES</span><svg viewBox="0 0 48 20"><path d="M1 2v16M5 2v16M7 2v16M11 2v16M16 2v16M18 2v16M23 2v16M27 2v16M29 2v16M34 2v16M39 2v16M41 2v16M47 2v16"/></svg></div></aside>
+      <section id="library-workspace" class="library-workspace" aria-label="Структура знаний и проверок" hidden></section>
+    </div>
+
+    <section class="record-strip" aria-label="Факты сохранённого исследования"><div class="phase-block"><div class="strip-heading"><span class="eyebrow">01 / Ход исследования</span><span class="strip-symbol" aria-hidden="true">→</span></div><div id="phase-track" class="phase-track"><span class="muted">Чтение этапов…</span></div></div><div class="usage-block"><div class="strip-heading"><span class="eyebrow">02 / Затрачено</span><span class="strip-symbol" aria-hidden="true">↗</span></div><div id="usage-track" class="usage-track"><span class="muted">—</span></div></div><div class="memory-block"><div class="strip-heading"><span class="eyebrow">03 / Память</span><span class="strip-symbol" aria-hidden="true">⊕</span></div><div id="memory-track" class="memory-track"><span class="muted">—</span></div></div><div class="queue-block"><div class="strip-heading"><span class="eyebrow">04 / Очередь</span><span class="strip-symbol" aria-hidden="true">↳</span></div><div id="queue-track" class="queue-track"><span class="muted">—</span></div></div></section>
+    <footer class="page-foot"><span>VVFRONTIER <span class="muted">/</span> Поле проверяемых идей</span><span class="numeric">Локальный инструмент · 01</span></footer>
+  </main>
+</body>
+</html>

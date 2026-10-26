@@ -1,0 +1,54 @@
+name: Local Windows alpha
+
+on:
+  push:
+    branches: [main, 'release/**']
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-tests:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12', '3.13']
+    env:
+      PYTHONUTF8: '1'
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install the actual managed local runtime and media encoder
+        run: python -I -B tools/setup_local.py
+      - name: Run synthetic tests without model or Telegram credentials
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+          import tempfile, unittest
+          temporary = Path('tests/.tmp').resolve()
+          temporary.mkdir(parents=True, exist_ok=True)
+          tempfile.tempdir = str(temporary)
+          result = unittest.TextTestRunner(verbosity=2).run(
+              unittest.defaultTestLoader.discover('tests'))
+          raise SystemExit(not result.wasSuccessful())
+          '@ | & .\.venv\Scripts\python.exe -
+      - name: Build clean source release
+        if: matrix.python == '3.12'
+        run: .\.venv\Scripts\python.exe tools/build_local_release.py --output dist
+      - uses: actions/upload-artifact@v4
+        if: matrix.python == '3.12'
+        with:
+          name: local-windows-alpha
+          path: |
+            dist/*.zip
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
