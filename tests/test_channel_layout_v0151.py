@@ -53,6 +53,8 @@ class ChannelLayoutTests(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertLessEqual(utf16_len(result['text']), 3500)
         self.assertNotIn('…', result['text'])
+        self.assertIn('У АВТОРОВ\n', result['text'])
+        self.assertIn('Пара чисел не подтверждена.', result['text'])
         self.assertIn(first, result['text'])
         for section in data['story']:
             if section['id'] == 'findings':

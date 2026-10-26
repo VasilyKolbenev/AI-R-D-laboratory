@@ -571,9 +571,9 @@ def _story_post(data, *, compact=False):
     numeric_note=data.get('numeric_note','')
     if compact:
         labels.update(problem='ЗАДАЧА',audience='КОМУ',mechanism='МЕХАНИЗМ',
-                      findings='ДАННЫЕ',resources='РЕСУРСЫ',takeaway='ВЫВОД')
+                      findings='У АВТОРОВ',resources='РЕСУРСЫ',takeaway='ВЫВОД')
         if numeric_note=='Нет сопоставимой пары подтверждённых чисел; известные данные и пробелы показаны в таблице.':
-            numeric_note='Нет сопоставимых чисел.'
+            numeric_note='Пара чисел не подтверждена.'
     texts={section['id']:'\n'.join(([numeric_note] if section['id']=='findings' and numeric_note else [section['text']] if section.get('text') and section['id']!='findings' else [])+
                                 [('• ' if not compact and len(section.get('items',[]))>1 else '')+item for item in section.get('items',[])])
            for section in data['story']}
