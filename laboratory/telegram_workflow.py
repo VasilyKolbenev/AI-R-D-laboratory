@@ -39,7 +39,7 @@ def _moscow_slot(value):
         local = timestamp.astimezone(_MOSCOW)
     except (ValueError, OverflowError):
         return None
-    return _WEEKDAYS[local.weekday()] + local.strftime(", %d.%m.%Y, %H:%M МСК")
+    return _WEEKDAYS[local.weekday()] + local.strftime(", %d.%m.%Y, %H:%M") + " МСК"
 
 
 def _weekly_slot(value):

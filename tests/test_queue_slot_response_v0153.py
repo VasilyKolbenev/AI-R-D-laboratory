@@ -2,13 +2,29 @@
 import copy
 import sqlite3
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+
+import laboratory.telegram_workflow as workflow_module
 
 import test_telegram_workflow as fixtures
 
 
 class QueueSlotResponseTests(unittest.TestCase):
     setUp = fixtures.TelegramWorkflowTests.setUp
+
+    def test_slot_uses_ascii_strftime_independent_of_windows_locale(self):
+        local = Mock()
+        local.weekday.return_value = 0
+
+        def ascii_date(pattern):
+            pattern.encode('ascii')  # CPython 3.11 Windows C-locale boundary.
+            return ', 26.10.2026, 00:30'
+
+        local.strftime.side_effect = ascii_date
+        with patch.object(workflow_module, 'datetime') as clock:
+            clock.fromisoformat.return_value.astimezone.return_value = local
+            self.assertEqual(workflow_module._moscow_slot('2026-10-25T21:30:00Z'),
+                             'пн, 26.10.2026, 00:30 МСК')
 
     def publisher(self, **changes):
         entry = {'id': 'TESTONLYentry1234', 'state': 'queued', 'status': 'queued',
