@@ -14,7 +14,7 @@ import re
 import secrets
 import threading
 
-from .core import canonical, digest
+from .core import BudgetLimitError, canonical, digest
 from .memory import _tokens
 
 
@@ -339,6 +339,9 @@ class TelegramWorkflow:
                 cost_notice = ("Кнопка «Одобрить и исследовать» резервирует 3 вызова CLI за 24 часа: "
                                "исследователь → критик → рецензент, до " + str(run["plan"]["timeout_seconds"]) + " сек. всего."
                                if reviewed else "Кнопка «Одобрить и исследовать» расходует лимит на один запуск.")
+                if not self.store.pilot_allowance(run['id']):
+                    from .research_budget import notice
+                    cost_notice += "\n\n" + notice(self.store.budget_status(run['plan']))
                 result = self._text("Материал для этого апрува:\n" + material_titles +
                                     "\n\nПроверь все части плана выше. Версия " + run["plan_hash"][:12] +
                                     (". Источники, память и исполнитель зафиксированы checkpoint.\n" if resume else
@@ -474,8 +477,11 @@ class TelegramWorkflow:
                 elif command == "/status":
                     if session:
                         run = self.store.run(session["run_id"])
+                        from .research_budget import notice
+                        budget_notice = ("\n" + notice(self.store.budget_status(run['plan']))
+                                         if run['status'] == 'planned' and not self.store.pilot_allowance(run['id']) else '')
                         self._text("Исследование: " + run["status"] + ". Доставка: " + session.get("delivery", "pending") +
-                                   ".\nПовторного модельного запуска нет. /result — получить сохранённый отчёт.", session)
+                                   ".\nПовторного модельного запуска нет. /result — получить сохранённый отчёт." + budget_notice, session)
                     else:
                         self._text("Пока нет исследования. Перешли материал об ИИ.")
                 elif command == "/result":
@@ -697,8 +703,12 @@ class TelegramWorkflow:
             except ValueError as exc:
                 session["state"] = "ready"
                 self._save(sessions)
-                self._answer(token, query, "Запуск отклонён. Обновите план через /plan.")
-                self._text("Запуск не выполнен: " + str(exc) + "\nНажми «Обновить план и память», затем проверь новый апрув.", session)
+                if isinstance(exc, BudgetLimitError):
+                    self._answer(token, query, "Локального бюджета пока недостаточно. Подробности — в сообщении.")
+                    self._text("⏳ Исследование не запущено.\n" + str(exc), session)
+                else:
+                    self._answer(token, query, "Запуск отклонён. Обновите план через /plan.")
+                    self._text("Запуск не выполнен: " + str(exc) + "\nНажми «Обновить план и память», затем проверь новый апрув.", session)
                 return
             except Exception:
                 session["state"] = "approval_uncertain"
