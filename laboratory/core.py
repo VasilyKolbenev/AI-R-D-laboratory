@@ -19,6 +19,13 @@ class LabError(ValueError):
     pass
 
 
+class BudgetLimitError(LabError):
+    def __init__(self, budget):
+        from .research_budget import notice
+        self.budget = budget
+        super().__init__(notice(budget))
+
+
 def now():
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -140,6 +147,14 @@ class Store:
 
     def settings(self):
         return {k: self.get_setting(k, v) for k, v in DEFAULTS.items()}
+
+    def budget_status(self, plan):
+        from .orchestration import call_reservation
+        from .research_budget import snapshot
+        with self.connect() as db:
+            row = db.execute("SELECT value FROM settings WHERE key='daily_run_limit'").fetchone()
+            limit = json.loads(row[0]) if row else DEFAULTS['daily_run_limit']
+            return snapshot(db, limit, call_reservation(plan), datetime.now(timezone.utc))
 
     def update_settings(self, values):
         current = self.settings()
@@ -413,7 +428,6 @@ class Store:
             raise LabError("Для запуска нужно ваше явное подтверждение.")
         if not isinstance(command_id, str) or not 8 <= len(command_id) <= 100:
             raise LabError("Некорректный идентификатор команды.")
-        cutoff = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat(timespec="seconds")
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT * FROM runs WHERE id=?", (run_id,)).fetchone()
@@ -440,13 +454,13 @@ class Store:
             limit = json.loads(limit_row[0]) if limit_row else DEFAULTS["daily_run_limit"]
             from .orchestration import call_reservation
             required = call_reservation(json.loads(row["plan"]))
-            count = sum(call_reservation(json.loads(item[0])) for item in
-                        db.execute("SELECT plan FROM runs WHERE approved_at>=?", (cutoff,)))
+            from .research_budget import snapshot
+            budget = snapshot(db, limit, required, datetime.now(timezone.utc))
             allowance = self._pilot_allowance(db, row)
             if required != 1:
                 allowance = None
-            if count + required > limit and not allowance:
-                raise LabError(f"Недостаточно локального бюджета за последние 24 часа: нужно {required} вызова CLI, доступно {max(0, limit-count)}. Суточный предел не менялся.")
+            if not budget['can_start'] and not allowance:
+                raise BudgetLimitError(budget)
             if allowance:
                 saved = json.loads(db.execute("SELECT value FROM settings WHERE key=?", (PILOT_BUDGET_KEY,)).fetchone()[0])
                 saved[run_id].update(state="consumed", used_at=now())

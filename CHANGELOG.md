@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased · 2026-10-27
+
+- Telegram plan approvals and `/status` show the current rolling 24-hour CLI
+  reservation budget and the earliest eligible Moscow time for that plan.
+- An exhausted budget no longer suggests refreshing the plan to unlock it.
+  Limits, reservations, existing approvals and the no-automatic-retry policy stay unchanged.
+
 ## v0.20.1-alpha.1 · 2026-10-26
 
 - GitHub repository captures prioritize the README instead of page navigation.
