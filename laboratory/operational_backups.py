@@ -148,6 +148,8 @@ class OperationalBackups:
             if path.stat().st_size != expected[name]['size'] or _hash(path) != expected[name]['sha256']:
                 raise ValueError('Контрольная сумма файла копии не совпадает.')
         packages = _database_checks(payload / 'laboratory.sqlite3', payload)
+        from .corpus import verify_corpora
+        verify_corpora(payload)
         return manifest, {'valid': True, 'database_integrity': 'ok', 'publication_packages': packages}
 
     def validate(self, identifier):
@@ -200,7 +202,7 @@ class OperationalBackups:
             try:
                 inventory, source_bytes = {}, 0
                 for path in _files(self.data):
-                    if path == self.store.path:
+                    if path == self.store.path.resolve():
                         continue
                     stat = path.stat()
                     inventory[path] = (stat.st_size, stat.st_mtime_ns, stat.st_ino)
@@ -243,7 +245,7 @@ class OperationalBackups:
                                 raise ValueError('Файл изменился при резервировании.')
                     rows.append({'path': relative, 'size': before.st_size, 'sha256': _hash(destination)})
                 current = {path: (path.stat().st_size, path.stat().st_mtime_ns, path.stat().st_ino)
-                           for path in _files(self.data) if path != self.store.path}
+                           for path in _files(self.data) if path != self.store.path.resolve()}
                 if current != inventory:
                     raise ValueError('Рабочие файлы изменились во время резервирования.')
                 manifest = {'format': FORMAT, 'complete': True,

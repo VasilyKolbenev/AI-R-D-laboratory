@@ -12,6 +12,8 @@ It does not replace the licenses below.
 | FFmpeg | Local H.264 encoder obtained during setup; not bundled in the application ZIP | License depends on enabled libraries/build; inspect `ffmpeg.exe -L` and `-buildconf`; [legal information](https://ffmpeg.org/legal.html) |
 | CPython | User-installed runtime, not bundled | [Python license](https://docs.python.org/3/license.html) |
 | BEIR / SciFact | Optional separately downloaded data; no corpus or author's receipt in the release | Claims/evidence CC BY 4.0, S2ORC abstracts ODC-By 1.0; [attribution](docs/research/lexical-pilot.md), [original license](https://github.com/allenai/scifact/blob/master/LICENSE.md) |
+| Drift Inspector EMNLP 2020–2025 | Optional pinned external papers, machine-extracted claims and canonical topic assignments; data are not bundled | Dataset CC BY 4.0; Vsevolod Karimov, Stepan Ostarkov, Anastasia Poroshina, Anatoly Frolov and Alexander Panchenko; source abstracts ACL Anthology; [dataset](https://huggingface.co/datasets/Hamyrappy/emnlp-2020-2025-atomic-claims), [method and attribution](docs/research/drift-corpus.md) |
+| DuckDB | Optional isolated Parquet conversion tool; not installed by Setup or bundled with the app | MIT; [upstream](https://github.com/duckdb/duckdb); installed distribution retains its notices |
 
 Installed packages retain upstream licenses and metadata in `.venv`.
 Redistribution of added binaries or datasets requires retaining and reviewing

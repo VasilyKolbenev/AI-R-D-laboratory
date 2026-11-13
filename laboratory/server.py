@@ -27,6 +27,8 @@ MAX_RESTORE_REQUEST = 128 * 1024 * 1024
 class Laboratory:
     def __init__(self, data_dir, runner=None, telegram_factory=TelegramBridge):
         self.store = Store(data_dir)
+        from .corpus import Corpus
+        self.corpus = Corpus(data_dir)
         self.store.recover_interrupted()
         self.store.memory.repair_completed_reviews()
         self.csrf = secrets.token_urlsafe(32)
@@ -236,6 +238,9 @@ class Handler(BaseHTTPRequestHandler):
             parsed = urlsplit(self.path)
             path = parsed.path
             query = parse_qs(parsed.query).get("q", [""])[0]
+            from .corpus_api import handle_get as corpus_get
+            if corpus_get(self, path):
+                return
             from .research_api import handle_get
             if handle_get(self, path):
                 return
@@ -254,6 +259,8 @@ class Handler(BaseHTTPRequestHandler):
                 '/workbench/library.css': ('library.css', 'text/css; charset=utf-8'),
                 '/workbench/benchmark.js': ('benchmark.js', 'text/javascript; charset=utf-8'),
                 '/workbench/benchmark.css': ('benchmark.css', 'text/css; charset=utf-8'),
+                '/workbench/corpus.js': ('corpus.js', 'text/javascript; charset=utf-8'),
+                '/workbench/corpus.css': ('corpus.css', 'text/css; charset=utf-8'),
                 '/workbench/icons.svg': ('icons.svg', 'image/svg+xml'),
                 '/workbench/fonts/Manrope.ttf': ('fonts/Manrope.ttf', 'font/ttf'),
             }

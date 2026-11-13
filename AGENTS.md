@@ -6,6 +6,11 @@ stored evidence. A completed agent pipeline does not mean a technology was
 validated on a task. Never convert source analysis or a simulation illustration
 into an executed benchmark result.
 
+The current product direction centers on a versioned scientific corpus, claims,
+reproducible trends and applied comparisons. Preserve the existing UI, memory,
+evidence and Telegram workflow. Imported Drift Inspector claims remain external
+unverified extractions; do not attribute their extraction to this laboratory.
+
 When the owner gives directional feedback, continue the authorized work and add
 a small product brainstorm: two to four adjacent improvements, one recommended
 priority, its practical benefit and what is deferred. Infer the underlying goal
