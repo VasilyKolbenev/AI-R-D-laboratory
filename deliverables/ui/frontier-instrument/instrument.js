@@ -20,10 +20,11 @@
   const state = {runs: [], run: null, p: null, quality: null, research: null, queue: null, lens: 'mechanism', space: 'study', knowledge: null, workspace: null, libraryLoading: false, selected: null, epoch: 0, loading: false, frame: 0, graph: null, playing: false, abort: null};
   const cache = new Map();
   const researchReads = new Map();
-  let libraryRequest = null, libraryInstance = null, benchmarkInstance = null, benchmarkTimer = null, benchmarkUntil = 0;
+  let libraryRequest = null, libraryInstance = null, benchmarkInstance = null, corpusInstance = null, benchmarkTimer = null, benchmarkUntil = 0;
   const benchmarkState = {plans:[],selected:null,loaded:false,loading:false};
   let benchmarkRead = 0;
   if(location.hash==='#benchmarks')state.space='benchmarks';
+  if(location.hash==='#corpus')state.space='corpus';
   function el(tag, value, cls) {const n = document.createElement(tag); if (value !== undefined) n.textContent = value; if (cls) n.className = cls; return n;}
   function svg(tag, attrs = {}, value) {const n = document.createElementNS(NS, tag); for (const [k,v] of Object.entries(attrs)) n.setAttribute(k, String(v)); if (value !== undefined) n.textContent = value; return n;}
   function add(parent, ...nodes) {for (const n of nodes.flat()) if (n) parent.append(n); return parent;}
@@ -249,6 +250,7 @@
   function paintLibrary() {
     if(state.space==='study')return;
     if(state.space==='benchmarks'){paintBenchmark();return;}
+    if(state.space==='corpus'){paintCorpus();return;}
     const host=$('library-workspace');libraryInstance?.destroy?.();
     if(!window.FrontierLibrary?.mount){replace('library-workspace',paragraph('Компонент таблиц не загрузился. Обновите страницу.'));return;}
     if(state.libraryLoading&&!state.knowledge){replace('library-workspace',paragraph('Читаем таблицу знаний и реестр измерений…'));return;}
@@ -273,19 +275,26 @@
     try{const p=await api('/api/runs/'+other.id+'/presentation');cache.set(other.id,{run:other,p,quality:null,research:null});if(state.space==='compare')paintLibrary();}catch(e){if(state.space==='compare')error('Второй отчёт не прочитан: '+e.message);}
   }
   async function setSpace(space) {
-    if(!['study','knowledge','compare','validation','benchmarks'].includes(space))return;
+    if(!['study','knowledge','compare','validation','benchmarks','corpus'].includes(space))return;
     stop();state.space=space;const library=space!=='study';
     const controlled=space==='benchmarks'&&isWorkingLab;
     $('mode-notice').textContent=controlled?'CPU-проверка · один прогон после подтверждения · без моделей и API':'Режим чтения · сохранённые данные · без запусков';
     $('connection-status').textContent=controlled?'Точный план перед CPU-запуском':'Ваши сохранённые данные · только чтение';
     document.querySelector('.rail-footnote').textContent=controlled?'Контролируемый CPU-прогон после подтверждения.':'Только чтение локальных результатов.';
     if(space!=='benchmarks'){clearTimeout(benchmarkTimer);benchmarkTimer=null;benchmarkInstance?.destroy?.();benchmarkInstance=null;}
+    if(space!=='corpus'){corpusInstance?.destroy?.();corpusInstance=null;}
     if(!state.run&&space==='study')emptyStudy();
     document.querySelector('.reading-field').hidden=library;document.querySelector('.paper-panel').hidden=library||!state.run;document.querySelector('.record-strip').hidden=library||!state.run;$('library-workspace').hidden=!library;
     for(const b of $('space-tabs').querySelectorAll('button')){if(b.dataset.space===space)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');}
-    if(space==='benchmarks'){libraryInstance?.destroy?.();libraryInstance=null;paintBenchmark();try{await loadBenchmarkData();paintBenchmark();}catch(e){error('CPU-проверки недоступны: '+e.message);}}
+    if(space==='corpus'){libraryInstance?.destroy?.();libraryInstance=null;paintCorpus();}
+    else if(space==='benchmarks'){libraryInstance?.destroy?.();libraryInstance=null;paintBenchmark();try{await loadBenchmarkData();paintBenchmark();}catch(e){error('CPU-проверки недоступны: '+e.message);}}
     else if(library){paintLibrary();await Promise.all([loadLibrary(),loadResearch()]);if(space==='compare')await compareReports();paintLibrary();}
     else libraryInstance?.destroy?.();
+  }
+  function paintCorpus() {
+    if(state.space!=='corpus'||corpusInstance)return;
+    if(!window.FrontierCorpus?.mount){replace('library-workspace',paragraph('Компонент корпуса не загрузился. Обновите страницу.'));return;}
+    corpusInstance=window.FrontierCorpus.mount($('library-workspace'),{onSummary:value=>{if(state.space==='corpus')$('workspace-summary').textContent=value;}});
   }
   async function benchmarkPost(action,body) {
     if(!isWorkingLab)throw new Error('Подтвердите запуск в рабочей локальной лаборатории.');
@@ -362,12 +371,13 @@
       const id=state.runs.find(r=>r.id===old)?.id||state.runs.find(r=>r.status==='completed')?.id||state.runs[0].id;selectEl.value=id;await select(id,refresh);
     }catch(e){state.run=null;state.p=null;state.quality=null;state.research=null;stop();$('workspace').hidden=true;$('loading-panel').hidden=true;error('Рабочая лаборатория недоступна. '+e.message);$('connection-status').textContent='Нет подключения к лаборатории';}
   }
-  $('research-select').addEventListener('change',e=>select(e.target.value));$('refresh-button').addEventListener('click',()=>{state.knowledge=null;state.workspace=null;start(true);});
+  $('research-select').addEventListener('change',e=>select(e.target.value));$('refresh-button').addEventListener('click',()=>{state.knowledge=null;state.workspace=null;corpusInstance?.refresh?.();start(true);});
   for(const b of $('space-tabs').querySelectorAll('button'))b.addEventListener('click',()=>setSpace(b.dataset.space));
   for(const b of $('lens-tabs').querySelectorAll('button'))b.addEventListener('click',()=>{if(!state.run)return;state.lens=b.dataset.lens;renderLens();if(state.lens==='comparison')loadResearch();});
   $('lens-tabs').addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;const buttons=[...$('lens-tabs').querySelectorAll('button')],index=buttons.indexOf(document.activeElement);if(index<0)return;e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?buttons.length-1:(index+(e.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;buttons[next].focus();buttons[next].click();});
   $('graph-step').addEventListener('click',nextEdge);$('graph-play').addEventListener('click',animate);
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();clearTimeout(benchmarkTimer);benchmarkTimer=null;}else benchmarkPoll();});window.addEventListener('pagehide',()=>{stop();clearTimeout(benchmarkTimer);});
-  window.FrontierFieldwork={snapshot:()=>({runId:state.run?.id||null,lens:state.lens,space:state.space,loading:state.loading,playing:state.playing,evidenceCount:arr(state.p?.evidence).length,readiness:state.research?.readiness?.stage||null,benchmarkId:benchmarkState.selected?.plan_id||null,benchmarkStatus:benchmarkState.selected?.status||null,readOnly:state.space!=='benchmarks'||!isWorkingLab})};
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();clearTimeout(benchmarkTimer);benchmarkTimer=null;}else benchmarkPoll();});window.addEventListener('pagehide',()=>{stop();clearTimeout(benchmarkTimer);corpusInstance?.destroy?.();});
+  window.addEventListener('pageshow',event=>{if(event.persisted&&state.space==='corpus'){corpusInstance=null;paintCorpus();}});
+  window.FrontierFieldwork={snapshot:()=>({runId:state.run?.id||null,lens:state.lens,space:state.space,loading:state.loading,playing:state.playing,evidenceCount:arr(state.p?.evidence).length,readiness:state.research?.readiness?.stage||null,benchmarkId:benchmarkState.selected?.plan_id||null,benchmarkStatus:benchmarkState.selected?.status||null,corpus:corpusInstance?.snapshot?.()||null,readOnly:state.space!=='benchmarks'||!isWorkingLab})};
   start();
 })();

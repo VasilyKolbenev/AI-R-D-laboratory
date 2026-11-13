@@ -169,6 +169,36 @@ class TelegramWorkflowTests(unittest.TestCase):
                 self.assertLessEqual(len(button['callback_data'].encode()), 64)
         self.assertTrue(all(p['chat_id'] == 42 for p in messages))
 
+    def test_budget_block_shows_wait_time_without_refresh_loop_or_dispatch(self):
+        key, session, run = self.prepare()
+        self.store.update_settings({'daily_run_limit': 1})
+        previous = self.store.create_plan({'source_ids': [run['plan']['sources'][0]['id']]})
+        self.store.approve(previous['id'], previous['plan_hash'], True, 'TEST_ONLY-prior-budget')
+        self.store.finish(previous['id'], {'status': 'outcome_unknown'})
+        self.calls.clear()
+        self.workflow.handle_callback(TOKEN, self.callback(key, session))
+        messages = [p['text'] for method, p in self.calls if method == 'sendMessage']
+        self.assertEqual(len(messages), 1)
+        self.assertIn('МСК', messages[0])
+        self.assertIn('доступно 0', messages[0])
+        self.assertIn('Обновление плана и смена исполнителя бюджет не освобождают', messages[0])
+        self.assertNotIn('Нажми «Обновить план', messages[0])
+        self.assertNotIn('через /plan', messages[0])
+        self.assertEqual(self.store.run(run['id'])['status'], 'planned')
+        self.assertIsNone(self.store.run(run['id'])['approved_at'])
+        self.assertEqual(self.workflow._state()[key]['state'], 'ready')
+        self.assertEqual(self.store.settings()['daily_run_limit'], 1)
+
+    def test_budget_is_visible_beside_approval_and_in_status_without_dispatch(self):
+        _, session, _ = self.prepare()
+        footer = next(p['text'] for method, p in reversed(self.calls) if method == 'sendMessage')
+        self.assertIn('Локальный бюджет за скользящие 24 часа', footer)
+        self.calls.clear()
+        self.bridge._handle_update(TOKEN, self.incoming('/status', message_id=2))
+        self.assertIn('Локальный бюджет', self.calls[-1][1]['text'])
+        self.assertEqual(self.starts, [])
+        self.assertEqual(self.workflow._latest()[1]['plan_hash'], session['plan_hash'])
+
     def test_only_owner_private_exact_message_can_approve_and_replay_is_free(self):
         key, session, run = self.prepare()
         bad = [self.callback(key, session, **{'from': {'id': 99}}),

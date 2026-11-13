@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.21.0-alpha.1 · 2026-11-13
+
+- Optional pinned Drift Inspector corpus: papers, external contribution claims,
+  canonical topic assignments and a separately identified balanced analysis sample.
+- Recomputed distinct-paper topic/year shares are checked against all 486 published
+  values. Charts expose their numerator and denominator papers and source abstracts.
+- The existing workbench gains a read-only corpus mode with source/claim drill-down;
+  no extraction, embedding, clustering, research approval or Telegram send occurs.
+- Immutable corpus sidecars are included and validated in full operational backups.
+  JSON research export remains separate. Setup/runtime gain no model dependencies.
+
+## Unreleased · 2026-10-27
+
+- Telegram plan approvals and `/status` show the current rolling 24-hour CLI
+  reservation budget and the earliest eligible Moscow time for that plan.
+- An exhausted budget no longer suggests refreshing the plan to unlock it.
+  Limits, reservations, existing approvals and the no-automatic-retry policy stay unchanged.
+
 ## v0.20.1-alpha.1 · 2026-10-26
 
 - GitHub repository captures prioritize the README instead of page navigation.

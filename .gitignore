@@ -9,6 +9,7 @@
 # Dependencies and build caches
 node_modules/
 .venv/
+.corpus-converter/
 venv/
 __pycache__/
 *.py[cod]
