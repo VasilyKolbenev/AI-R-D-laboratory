@@ -29,6 +29,20 @@
   function points(topic) { return arr(topic?.trajectory).filter(p => finite(p.year)).slice().sort((a,b) => a.year - b.year); }
   function change(topic) { if (finite(topic?.delta_pp)) return topic.delta_pp; const rows = points(topic); return rows.length && finite(rows[0].share) && finite(rows.at(-1).share) ? rows.at(-1).share - rows[0].share : null; }
 
+  function validTrendSeries(value) {
+    if (!Array.isArray(value) || !value.length || value.length > 1001) return false;
+    const ids = new Set(), reference = value[0]?.points;
+    if (!Array.isArray(reference) || reference.length < 2 || reference.length > 100) return false;
+    return value.every(series => {
+      if (!Number.isInteger(series?.id) || ids.has(series.id) || !Array.isArray(series.points) || series.points.length !== reference.length) return false;
+      ids.add(series.id);
+      return series.points.every((point, index, rows) => Number.isInteger(point?.year) && point.year === reference[index]?.year &&
+        (!index || point.year > rows[index - 1].year) && Number.isInteger(point.numerator) && Number.isInteger(point.denominator) &&
+        point.denominator > 0 && point.denominator === reference[index]?.denominator && point.numerator >= 0 && point.numerator <= point.denominator &&
+        finite(point.share) && point.share >= 0 && point.share <= 100 && Math.abs(point.share - point.numerator * 100 / point.denominator) <= 0.00005001);
+    });
+  }
+
   function visualSpec(value, snapshotId) {
     const spec=obj(value),blocks=arr(spec.blocks),kinds=new Set(['corpus_overview','trend_lines','topic_table','applicability','evidence_ledger']);
     if(spec.version!=='visual-spec-v1'||spec.subject?.type!=='corpus'||spec.subject.id!==snapshotId||spec.input_binding?.snapshot_id!==snapshotId||!blocks.length||blocks.length>24||new Set(blocks.map(block=>block?.id)).size!==blocks.length)return null;
@@ -36,7 +50,7 @@
     const primary=blocks.find(block=>block.id===spec.primary_block_id&&block.selected&&block.available);
     if(!primary||!['corpus_overview','trend_lines','topic_table'].includes(primary.kind))return null;
     const trend=blocks.find(block=>block.kind==='trend_lines'&&block.selected&&block.available);
-    if(trend&&!Array.isArray(trend.data?.series))return null;
+    if(trend&&(trend.data?.unit!=='percent'||trend.data?.quantity!=='distinct_paper_share'||!validTrendSeries(trend.data?.series)))return null;
     return {...spec,primary,block:kind=>blocks.find(block=>block.kind===kind&&block.selected&&block.available)};
   }
 
@@ -44,7 +58,8 @@
     if (!host || typeof host.replaceChildren !== 'function') throw new TypeError('FrontierCorpus.mount: нужен DOM-контейнер.');
     let destroyed = false, data = null, currentTopic = null, currentYear = null, currentCohort = 'numerator',
       currentOffset = 0, currentPaper = null, search = '', loading = false, overviewEpoch = 0,
-      topicEpoch = 0, paperEpoch = 0, allClaims = false, selectedPaperId = null, visual = null;
+      topicEpoch = 0, paperEpoch = 0, allClaims = false, selectedPaperId = null, visual = null,
+      activeChart = null, chartObserver = null, chartDeadline = null, trendEpoch = 0, resizeFrame = null, renderer = 'native_dom_svg', rendererState = 'fallback', rendererReason = '';
     const controllers = new Set();
     const root = el('section', undefined, 'fc-corpus');
     root.dataset.corpusView = 'true'; host.replaceChildren(root);
@@ -74,12 +89,34 @@
     }
     function topicChange(topic) {if(!visual)return change(topic);const rows=topicPoints(topic);return rows.length&&finite(rows[0].share)&&finite(rows.at(-1).share)?rows.at(-1).share-rows[0].share:null;}
     function visualDisclosure() {
-      if(!visual)return details('visual-choice','Почему этот визуал',el('p','VisualSpec отсутствует, повреждён или его версия не поддерживается. Запасной вид: trend_lines из опубликованной траектории; встроенные HTML/SVG/CSS адаптеры. Неизвестные значения не заменяются нулём.'));
+      const runtime = renderer === 'antv_g2' ? 'Фактический рендерер: AntV G2 5.4.8 · локальная библиотека. Нативные подсказка и перекрестие; клик по точке раскрывает статьи выбранного года.' :
+        rendererState === 'loading' ? 'Подготавливается AntV G2. Значения и кнопки годов уже доступны.' :
+        'Фактический рендерер: встроенный HTML/SVG. ' + rendererReason + ' Значения и точные статьи доступны через кнопки годов.';
+      if(!visual)return details('visual-choice','Почему этот визуал',el('p','VisualSpec отсутствует, повреждён или его версия не поддерживается. Запасной вид: trend_lines из опубликованной траектории. Неизвестные значения не заменяются нулём.'),el('p',runtime));
       const primary=visual.primary,body=[el('p','Выбранный вид: '+primary.kind+'. '+text(primary.reason)),
         el('p','Происхождение: '+(text(primary.provenance?.origin)||'не указано')+'.'),
-        el('p','Рендерер интерфейса: '+(text(primary.supported_renderer)||'native_dom_svg')+' · встроенные HTML/SVG/CSS адаптеры. Предпочтительный движок: '+(text(primary.preferred_engine)||'не указан')+'; здесь он не подключён.')];
+        el('p',runtime)];
       for(const choice of arr(visual.choices).filter(choice=>choice?.status==='deferred'))body.push(el('p',(text(choice.kind)||'Отложенный визуал')+': '+text(choice.reason)));
       return details('visual-choice','Почему этот визуал',...body);
+    }
+
+    function setRenderer(name, state, reason = '', chartHost = null) {
+      renderer = name; rendererState = state; rendererReason = reason;
+      for (const node of [root, trendHost, chartHost].filter(Boolean)) {
+        node.dataset.corpusRenderer = name; node.dataset.corpusRendererState = state;
+        node.dataset.corpusRendererReason = reason;
+        if (name === 'antv_g2') node.dataset.corpusRendererVersion = '5.4.8'; else delete node.dataset.corpusRendererVersion;
+      }
+      const previous = trendHost.querySelector('.fc-visual-choice');
+      if (previous) { const focus=focusKey();rememberDetails();const next=visualDisclosure();next.classList.add('fc-visual-choice');previous.replaceWith(next);restoreFocus(focus); }
+    }
+    function disposeTrend() {
+      ++trendEpoch;
+      if (chartDeadline !== null) { clearTimeout(chartDeadline); chartDeadline = null; }
+      if (chartObserver) { chartObserver.disconnect(); chartObserver = null; }
+      if (resizeFrame !== null) { cancelAnimationFrame(resizeFrame); resizeFrame = null; }
+      const chart = activeChart; activeChart = null;
+      if (chart) { try { Promise.resolve(chart.destroy()).catch(() => {}); } catch (_) { /* A failed renderer must not interrupt the evidence browser. */ } }
     }
 
     function setMessage(value) { message.hidden = !value; message.textContent = value || ''; }
@@ -153,47 +190,143 @@
       topicsHost.replaceChildren(add(el('div', undefined, 'fc-topic-list-head'), el('span', 'ТЕМЫ / EN'), el('span', fmt(visible.length))), list);
     }
 
-    function drawTrend() {
-      rememberDetails();const focus=focusKey(),topic = currentTopic, rows = topicPoints(topic), difference = topicChange(topic);
-      if (!topic) { trendHost.replaceChildren(empty('Выбери направление', 'Показатели раскроются до утверждений и статей.')); return; }
-      const changeNode = el('div', delta(difference), 'fc-trend-delta'); changeNode.dataset.negative = String(difference < 0); changeNode.append(el('small', rows.length ? rows[0].year + ' → ' + rows.at(-1).year : 'Изменение доли'));
-      const trends=!visual||visual.block('trend_lines');
-      const heading = add(el('div', undefined, 'fc-trend-head'), add(el('div'), el('span', topic.is_noise ? 'ШУМ В АНАЛИТИЧЕСКОЙ ВЫБОРКЕ' : 'ВЫБРАННОЕ НАПРАВЛЕНИЕ', 'fc-eyebrow'), el('h3', text(topic.full_name) || topicName(topic))),trends?changeNode:null);
-      const plot = el('div', undefined, 'fc-plot');
-      plot.append(add(el('div', undefined, 'fc-plot-kicker'), el('span',trends?'ДОЛЯ СТАТЕЙ ГОДА':'СОХРАНЁННЫЙ СОСТАВ ВЫБОРКИ'), el('span', 'НАЖМИ ГОД → ИСТОЧНИКИ')));
+    function nativeTrend(topic, rows) {
       const valid = rows.filter(row => finite(row.share) && row.share >= 0 && row.share <= 100);
-      if (valid.length && (!visual || visual.block('trend_lines'))) {
-        const compact = root.clientWidth < 570;
-        const width = compact ? 400 : 680, height = 235, left = 32, right = 28, top = 27, bottom = 35, max = Math.max(1, ...valid.map(row => row.share)) * 1.17;
-        const x = index => left + (rows.length > 1 ? index / (rows.length - 1) : .5) * (width-left-right);
-        const y = value => height-bottom-(value/max)*(height-top-bottom);
-        const chart = svg('svg', {viewBox: '0 0 ' + width + ' ' + height, role:'img', 'aria-label':topicName(topic) + ': доля статей по годам'});
-        for (const value of [0, max/2, max]) add(chart, svg('line', {x1:left,y1:y(value),x2:width-right,y2:y(value),class:'fc-chart-grid'}), svg('text',{x:0,y:y(value)+4,class:'fc-chart-axis'},fmt(value,1)+'%'));
-        const coordinates = rows.map((row,index) => finite(row.share) && row.share >= 0 && row.share <= 100 ? [x(index),y(row.share)] : null);
-        let line = '', area = '', segment = [];
-        function finishSegment() { if (!segment.length) return; line += segment.map((point,index) => (index ? 'L':'M') + point.join(',')).join(' '); area += 'M' + segment[0][0] + ',' + y(0) + ' ' + segment.map(point => 'L' + point.join(',')).join(' ') + ' L' + segment.at(-1)[0] + ',' + y(0) + ' Z '; segment = []; }
-        for (const point of coordinates) { if (point) segment.push(point); else finishSegment(); } finishSegment();
-        add(chart, svg('path',{d:area,class:'fc-chart-area'}), svg('path',{d:line,class:'fc-chart-line'}));
-        rows.forEach((row,index) => {
-          const point = coordinates[index]; if (!point) return;
-          const dot = svg('circle',{cx:point[0],cy:point[1],r:6,class:'fc-chart-dot',tabindex:0,role:'button','aria-pressed':String(currentYear===row.year),'aria-label':row.year+': '+percent(row.share)+', '+fmt(row.numerator)+' из '+fmt(row.denominator)+' статей','data-selected':String(currentYear===row.year),'data-corpus-control':'point-'+row.year});
-          dot.append(svg('title',{},row.year+': '+fmt(row.numerator)+' / '+fmt(row.denominator)+' · '+percent(row.share)));
-          dot.addEventListener('click',()=>selectYear(row.year)); dot.addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)){event.preventDefault();selectYear(row.year);}});
-          add(chart, svg('text',{x:point[0],y:point[1]-14,'text-anchor':'middle',class:'fc-chart-value'},percent(row.share)),dot,svg('text',{x:point[0],y:height-9,'text-anchor':'middle',class:'fc-chart-label'},row.year));
-        });
-        plot.append(chart);
-      } else if(!valid.length)plot.append(empty('Недостаточно данных для линии', 'Неизвестные значения не заменяются нулём.'));
-      const years = el('div', undefined, 'fc-year-grid');
-      for (const row of rows) {
-        const year = button('', () => selectYear(row.year), 'fc-year'); year.dataset.corpusYear = String(row.year); year.dataset.corpusControl='year-'+row.year; year.setAttribute('aria-pressed',String(currentYear===row.year));
-        add(year,el('strong',row.year),el('span',fmt(row.numerator)+' / '+fmt(row.denominator))); year.setAttribute('aria-label',row.year+': показать '+fmt(row.numerator)+' из '+fmt(row.denominator)+' статей'); years.append(year);
-      }
-      plot.append(years,el('p','В каждой ячейке: статьи с темой / все статьи аналитической выборки этого года.','fc-chart-note'));
-      trendHost.replaceChildren(heading);
-      if (text(topic.description)) trendHost.append(el('p',topic.description,'fc-topic-description'));
-      const why=visualDisclosure();why.classList.add('fc-visual-choice');trendHost.append(plot,why);restoreFocus(focus);
+      if (!valid.length) return empty('Недостаточно данных для линии', 'Неизвестные значения не заменяются нулём.');
+      const width = root.clientWidth < 570 ? 400 : 680, height = 265, left = 42, right = 30, top = 30, bottom = 35;
+      const max = Math.min(100, Math.max(1, ...valid.map(row => row.share)) * 1.18);
+      const x = index => left + (rows.length > 1 ? index / (rows.length - 1) : .5) * (width-left-right);
+      const y = value => height-bottom-(value/max)*(height-top-bottom);
+      const chart = svg('svg', {viewBox: '0 0 ' + width + ' ' + height, role:'img', 'aria-label':topicName(topic) + ': доля уникальных статей по годам. Кнопки годов под графиком открывают точные статьи.'});
+      for (const value of [0, max/2, max]) add(chart, svg('line', {x1:left,y1:y(value),x2:width-right,y2:y(value),class:'fc-chart-grid'}), svg('text',{x:0,y:y(value)+4,class:'fc-chart-axis'},fmt(value,1)+'%'));
+      const coordinates = rows.map((row,index) => finite(row.share) && row.share >= 0 && row.share <= 100 ? [x(index),y(row.share)] : null);
+      let line = '', area = '', segment = [];
+      function finishSegment() { if (!segment.length) return; line += segment.map((point,index) => (index ? 'L':'M') + point.join(',')).join(' '); area += 'M' + segment[0][0] + ',' + y(0) + ' ' + segment.map(point => 'L' + point.join(',')).join(' ') + ' L' + segment.at(-1)[0] + ',' + y(0) + ' Z '; segment = []; }
+      for (const point of coordinates) { if (point) segment.push(point); else finishSegment(); } finishSegment();
+      add(chart, svg('path',{d:area,class:'fc-chart-area'}), svg('path',{d:line,class:'fc-chart-line'}));
+      rows.forEach((row,index) => {
+        const point = coordinates[index]; if (!point) return;
+        const dot = svg('circle',{cx:point[0],cy:point[1],r:6,class:'fc-chart-dot',tabindex:0,role:'button','aria-pressed':String(currentYear===row.year),'aria-label':row.year+': '+percent(row.share)+', '+fmt(row.numerator)+' из '+fmt(row.denominator)+' статей','data-selected':String(currentYear===row.year),'data-corpus-control':'point-'+row.year});
+        dot.append(svg('title',{},row.year+': '+fmt(row.numerator)+' / '+fmt(row.denominator)+' · '+percent(row.share)));
+        dot.addEventListener('click',()=>selectYear(row.year)); dot.addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)){event.preventDefault();selectYear(row.year);}});
+        add(chart, svg('text',{x:point[0],y:point[1]-16,'text-anchor':'middle',class:'fc-chart-value'},percent(row.share)),dot,svg('text',{x:point[0],y:height-9,'text-anchor':'middle',class:'fc-chart-label'},row.year));
+      });
+      return chart;
     }
 
+    async function renderG2(chartHost, topic, rows, generation, revealTooltip) {
+      let chart, deadline = null, pointerType = '';
+      const isCurrent = () => !destroyed && generation === trendEpoch && chartHost.isConnected;
+      try {
+        chartHost.addEventListener('pointerdown',event=>{pointerType=event.pointerType;},{passive:true});
+        const compact = chartHost.clientWidth < 500;
+        chart = new window.G2.Chart({container:chartHost,autoFit:false,width:chartHost.clientWidth,height:chartHost.clientHeight});
+        activeChart = chart;
+        const tooltip = {title:datum=>String(datum.year),items:[
+          {field:'share',name:'Доля статей',valueFormatter:percent},
+          {field:'numerator',name:'С темой · уникальных',valueFormatter:value=>fmt(value)},
+          {field:'denominator',name:'Всего за год · уникальных',valueFormatter:value=>fmt(value)}]};
+        chart.options({
+          type:'view',data:rows,animate:false,paddingTop:24,paddingRight:24,paddingBottom:34,paddingLeft:compact?46:54,
+          theme:{type:'dark',view:{viewFill:'transparent',plotFill:'transparent'},defaultColor:'#dbff71'},
+          encode:{x:'year',y:'share'},
+          scale:{x:{type:'linear',domain:[rows[0].year,rows.at(-1).year],tickMethod:()=>rows.map(row=>row.year),nice:false},
+            y:{type:'linear',domain:[0,Math.min(100,Math.max(1,...rows.map(row=>row.share))*1.22)],nice:true}},
+          axis:{
+            x:{title:false,line:false,tick:false,grid:false,labelFill:'#b7bea9',labelFontSize:12,labelFontFamily:'Segoe UI, sans-serif',labelFormatter:value=>String(Math.round(Number(value))),labelAutoHide:false,labelAutoRotate:false},
+            y:{title:false,line:false,tick:false,grid:true,gridStroke:'#3a4132',gridLineDash:[3,6],gridStrokeOpacity:.8,labelFill:'#939e83',labelFontSize:11,labelFormatter:value=>fmt(Number(value),1)+' %'}
+          },
+          legend:false,
+          interaction:{tooltip:{series:true,shared:false,crosshairs:true,crosshairsX:false,crosshairsYStroke:'#b4c591',crosshairsYLineDash:[4,4],marker:true,markerFill:'#dbff71',markerStroke:'#1b2018',markerLineWidth:2,offset:[12,12],
+            render:(_event,options)=>{
+              const node = el('div',undefined,'fc-g2-tooltip'); node.setAttribute('role','tooltip');
+              add(node,el('strong',text(options.title)+' · аналитическая выборка','fc-g2-tooltip-title'));
+              const list = el('dl');
+              for (const item of arr(options.items)) add(list,el('dt',text(item.name)),el('dd',text(item.value)));
+              return add(node,list,el('span','Нажми точку → точные статьи','fc-g2-tooltip-hint'));
+            }}},
+          children:[
+            {type:'area',style:{fill:'#dbff71',fillOpacity:.075},tooltip:false,animate:false},
+            {type:'line',style:{stroke:'#dbff71',lineWidth:3,lineCap:'round',lineJoin:'round'},tooltip,animate:false},
+            {type:'lineX',data:rows.filter(row=>row.year===currentYear),encode:{x:'year'},style:{stroke:'#dbff71',strokeOpacity:.38,lineDash:[3,6],lineWidth:1},tooltip:false,animate:false},
+            {type:'point',encode:{shape:'point',size:5},style:{fill:'#20261a',stroke:'#dbff71',lineWidth:2,cursor:'pointer'},tooltip:false,animate:false},
+            {type:'point',data:rows.filter(row=>row.year===currentYear),encode:{shape:'point',size:7},style:{fill:'#dbff71',stroke:'#20261a',lineWidth:3,cursor:'pointer'},tooltip:false,animate:false}
+          ]
+        });
+        chart.on('point:click',event=>{const row=event?.data?.data;if(isCurrent()&&Number.isInteger(row?.year)&&rows.some(point=>point.year===row.year))selectYear(row.year,pointerType==='touch');});
+        await Promise.race([chart.render(),new Promise((_,reject)=>{deadline=setTimeout(()=>reject(new Error('Chart render timeout')),6000);chartDeadline=deadline;})]);
+        if (!isCurrent() || activeChart !== chart) return;
+        chartHost.querySelector('canvas')?.setAttribute('aria-hidden','true');
+        chartHost.removeAttribute('aria-busy');
+        setRenderer('antv_g2','ready','',chartHost);
+        if (revealTooltip) chart.emit('tooltip:show',{data:{data:{x:currentYear}}});
+        if (typeof ResizeObserver === 'function') {
+          let width=chartHost.clientWidth,height=chartHost.clientHeight,resizing=false,repeat=false;
+          const fit=async()=>{
+            resizeFrame=null;
+            if (!isCurrent() || activeChart!==chart) return;
+            if (resizing) { repeat=true;return; }
+            const nextWidth=chartHost.clientWidth,nextHeight=chartHost.clientHeight;
+            if (!nextWidth || !nextHeight || (width===nextWidth&&height===nextHeight)) return;
+            width=nextWidth;height=nextHeight;resizing=true;
+            try { await chart.changeSize(width,height); }
+            catch (_) {
+              if (isCurrent()&&activeChart===chart) {disposeTrend();chartHost.replaceChildren(nativeTrend(topic,rows));chartHost.classList.add('fc-chart-fallback');setRenderer('native_dom_svg','fallback','AntV G2 не смог обновить размер графика.',chartHost);}
+            } finally {resizing=false;if(repeat&&isCurrent()){repeat=false;resizeFrame=requestAnimationFrame(fit);}}
+          };
+          chartObserver=new ResizeObserver(()=>{if(!isCurrent())return;if(resizeFrame!==null)cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(fit);});
+          chartObserver.observe(chartHost);
+        }
+      } catch (_) {
+        if (!isCurrent()) return;
+        if (activeChart === chart) activeChart = null;
+        try { if(chart) await chart.destroy(); } catch (_) { /* Continue with the bounded native fallback. */ }
+        if (!isCurrent()) return;
+        chartHost.replaceChildren(nativeTrend(topic,rows));chartHost.classList.add('fc-chart-fallback');chartHost.removeAttribute('aria-busy');
+        setRenderer('native_dom_svg','fallback','AntV G2 не смог построить график в этом окружении.',chartHost);
+      } finally {
+        if (deadline !== null) clearTimeout(deadline);
+        if (chartDeadline === deadline) chartDeadline = null;
+      }
+    }
+
+    function drawTrend(revealTooltip = false) {
+      rememberDetails();const focus=focusKey(),topic=currentTopic,rows=topicPoints(topic),difference=topicChange(topic);
+      disposeTrend();
+      if (!topic) { setRenderer('native_dom_svg','empty','Нет выбранной темы.');trendHost.replaceChildren(empty('Выбери направление', 'Показатели раскроются до утверждений и статей.'));return; }
+      const changeNode=el('div',delta(difference),'fc-trend-delta');changeNode.dataset.negative=String(difference<0);changeNode.append(el('small',rows.length?rows[0].year+' → '+rows.at(-1).year+' · доля статей':'Изменение доли'));
+      const trends=!visual||visual.block('trend_lines');
+      const heading=add(el('div',undefined,'fc-trend-head'),add(el('div'),el('span',topic.is_noise?'ШУМ В АНАЛИТИЧЕСКОЙ ВЫБОРКЕ':'ВЫБРАННОЕ НАПРАВЛЕНИЕ','fc-eyebrow'),el('h3',text(topic.full_name)||topicName(topic))),trends?changeNode:null);
+      const plot=el('div',undefined,'fc-plot'),point=rows.find(row=>row.year===currentYear);
+      const kicker=add(el('div',undefined,'fc-plot-kicker'),el('span',trends?'ДОЛЯ УНИКАЛЬНЫХ СТАТЕЙ':'СОХРАНЁННЫЙ СОСТАВ ВЫБОРКИ'),el('span','ТОЧКА ИЛИ ГОД → СТАТЬИ'));
+      plot.append(kicker);
+      if (point && trends) {
+        const readout=el('div',undefined,'fc-point-readout');readout.dataset.corpusSelectedYear=String(point.year);
+        add(readout,add(el('div',undefined,'fc-readout-year'),el('span','ВЫБРАННЫЙ ГОД'),el('strong',point.year)),
+          add(el('div',undefined,'fc-readout-share'),el('strong',percent(point.share)),el('span','доля статей с темой')),
+          add(el('div',undefined,'fc-readout-count'),el('strong',fmt(point.numerator)+' / '+fmt(point.denominator)),el('span','уникальных статей · с темой / всего')));
+        plot.append(readout);
+      }
+      const chartHost=el('div',undefined,'fc-g2-chart');chartHost.dataset.corpusChart='trend-lines';chartHost.setAttribute('role','group');chartHost.setAttribute('aria-label',topicName(topic)+': динамика доли уникальных статей. Выбери год кнопками под графиком, чтобы открыть источники.');
+      const canRender=!!(trends&&rows.some(row=>finite(row.share)&&row.share>=0&&row.share<=100));
+      const useG2=canRender&&!!visual?.block('trend_lines')&&typeof window.G2?.Chart==='function';
+      if (canRender) {
+        if (useG2) {chartHost.setAttribute('aria-busy','true');setRenderer('native_dom_svg','loading','',chartHost);}
+        else {chartHost.classList.add('fc-chart-fallback');chartHost.append(nativeTrend(topic,rows));setRenderer('native_dom_svg','fallback',visual?'Локальная библиотека AntV G2 недоступна.':'Нет валидного VisualSpec для AntV G2.',chartHost);}
+        plot.append(chartHost);
+      } else {setRenderer('native_dom_svg','empty','Недостаточно проверенных данных для линии.');plot.append(empty('Недостаточно данных для линии','Неизвестные значения не заменяются нулём.'));}
+      const years=el('div',undefined,'fc-year-grid');years.setAttribute('role','group');years.setAttribute('aria-label','Год и точный состав выборки');
+      for (const row of rows) {
+        const year=button('',()=>selectYear(row.year),'fc-year');year.dataset.corpusYear=String(row.year);year.dataset.corpusControl='year-'+row.year;year.setAttribute('aria-pressed',String(currentYear===row.year));
+        add(year,el('strong',row.year),el('span',percent(row.share),'fc-year-share'),el('span',fmt(row.numerator)+' / '+fmt(row.denominator),'fc-year-count'));
+        year.setAttribute('aria-label',row.year+': '+percent(row.share)+', показать '+fmt(row.numerator)+' из '+fmt(row.denominator)+' уникальных статей');years.append(year);
+      }
+      plot.append(years,el('p','Доля отражает внимание исследователей. Рост не означает доказанный выигрыш технологии. Темы пересекаются; проценты не складываются в 100 %.','fc-chart-note'));
+      trendHost.replaceChildren(heading);
+      if(text(topic.description))trendHost.append(el('p',topic.description,'fc-topic-description'));
+      const why=visualDisclosure();why.classList.add('fc-visual-choice');trendHost.append(plot,why);restoreFocus(focus);
+      if(useG2)void renderG2(chartHost,topic,rows,trendEpoch,revealTooltip);
+    }
     function drawPapers(isLoading = false) {
       const point = yearPoint();
       const label = currentCohort === 'denominator' ? 'Знаменатель: все статьи года' : 'Статьи с выбранной темой';
@@ -261,7 +394,7 @@
         listData=value;drawPapers();if(arr(value.items).length){const id=arr(value.items).some(item=>text(item.paper_id)===previousId)?previousId:text(value.items[0].paper_id);selectPaper(id,false,preserve&&id===previousId);}
       } catch(error) { if(destroyed||epoch!==topicEpoch||error.name==='AbortError')return;papersHost.replaceChildren(empty('Статьи не прочитаны',error.message)); }
     }
-    function selectYear(year) { if(destroyed||!topicPoints(currentTopic).some(row=>row.year===year))return;currentYear=year;currentOffset=0;currentCohort='numerator';drawTrend();loadPapers(); }
+    function selectYear(year,revealTooltip = false) { if(destroyed||!topicPoints(currentTopic).some(row=>row.year===year))return;currentYear=year;currentOffset=0;currentCohort='numerator';drawTrend(revealTooltip);loadPapers(); }
     function selectTopic(id) {
       const topic=topicById(id);if(!topic||destroyed)return;currentTopic=topic;currentOffset=0;currentCohort='numerator';
       if(!topicPoints(topic).some(row=>row.year===currentYear))currentYear=topicPoints(topic).at(-1)?.year||null;
@@ -273,7 +406,7 @@
       try {
         const value=await read('/api/corpus');if(destroyed||epoch!==overviewEpoch)return;data=value;visual=visualSpec(value.visual_spec,value.corpus?.snapshot_id);
         root.dataset.corpusVisualSpec=visual?.version||'fallback';root.dataset.corpusVisualKind=visual?.primary.kind||'trend_lines';
-        if(value.available!==true){root.replaceChildren(empty('Корпус ещё не импортирован',text(value.message)||'Импорт готовых данных подключается отдельно. Модельные вызовы для него не нужны.'));return;}
+        if(value.available!==true){disposeTrend();root.replaceChildren(empty('Корпус ещё не импортирован',text(value.message)||'Импорт готовых данных подключается отдельно. Модельные вызовы для него не нужны.'));return;}
         drawOverview();
         const layout=add(el('div',undefined,'fc-layout'),topicsHost,add(el('div',undefined,'fc-main'),trendHost,add(el('div',undefined,'fc-evidence'),papersHost,sourceHost)));
         content.replaceChildren(layout);root.replaceChildren(message,overview,content,methods);
@@ -281,13 +414,13 @@
         if(selected&&selected.id===currentTopic?.id&&topicPoints(selected).some(row=>row.year===currentYear)){
           currentTopic=selected;drawTopics();drawTrend();loadPapers(true);restoreFocus(focus);
         }else if(selected)selectTopic(selected.id);else{drawTopics();drawTrend();clearSource();}
-      } catch(error) { if(destroyed||epoch!==overviewEpoch||error.name==='AbortError')return;root.replaceChildren(empty('Корпус недоступен',error.message),button('Повторить чтение',refresh)); }
+      } catch(error) { if(destroyed||epoch!==overviewEpoch||error.name==='AbortError')return;disposeTrend();root.replaceChildren(empty('Корпус недоступен',error.message),button('Повторить чтение',refresh)); }
       finally { if(epoch===overviewEpoch)loading=false; }
     }
     searchInput.addEventListener('input',()=>{search=searchInput.value;drawTopics();});
-    const resize=()=>{if(!destroyed&&currentTopic)drawTrend();};window.addEventListener('resize',resize);
+    const resize=()=>{if(!destroyed&&currentTopic&&rendererState!=='loading'&&renderer!=='antv_g2'){if(resizeFrame!==null)cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(()=>{resizeFrame=null;if(!destroyed)drawTrend();});}};window.addEventListener('resize',resize);
     refresh();
-    return {refresh,destroy(){destroyed=true;++overviewEpoch;++topicEpoch;++paperEpoch;cancel();window.removeEventListener('resize',resize);},snapshot:()=>({available:data?.available===true,topicId:currentTopic?.id??null,year:currentYear,cohort:currentCohort,paperId:selectedPaperId,loading,readOnly:true})};
+    return {refresh,destroy(){destroyed=true;++overviewEpoch;++topicEpoch;++paperEpoch;disposeTrend();cancel();if(resizeFrame!==null)cancelAnimationFrame(resizeFrame);window.removeEventListener('resize',resize);},snapshot:()=>({available:data?.available===true,topicId:currentTopic?.id??null,year:currentYear,cohort:currentCohort,paperId:selectedPaperId,loading,readOnly:true,renderer,rendererState})};
   }
   window.FrontierCorpus={mount};
 })();

@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.21.0-alpha.4 · 2026-11-13
+
+- Connects pinned local AntV Infographic 0.2.20 and G2 5.4.8 bundles to VisualSpec.
+  Software loads from the local server with browser integrity checks and retained
+  upstream licenses; no CDN, icon/font service or model call is needed.
+- Compatible saved process paths use a responsive AntV sequence with exact node
+  evidence selection. Branches, feedback and meaningful edge labels retain the
+  native graph rather than losing their semantics in a template.
+- Corpus trends use interactive G2 plots with exact paper-share tooltip/readout
+  and the existing year/cohort/source drilldown. Native rendering remains a
+  disclosed fallback if a library or render fails. Production CSP stays strict.
+
 ## v0.21.0-alpha.3 · 2026-11-13
 
 - VisualSpec binds an automatic, deterministic visual plan to the exact saved

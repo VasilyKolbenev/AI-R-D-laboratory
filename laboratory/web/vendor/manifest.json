@@ -1,0 +1,57 @@
+{
+  "format": "visual-vendor-v1",
+  "packages": [
+    {
+      "name": "@antv/infographic",
+      "version": "0.2.20",
+      "slug": "infographic",
+      "integrity": "sha512-XC1YXpQu6lJ3ZODUS7qBtai5cA8rUrzpegiOHjeCLElzJ6fki+N3yeosIKoYCUNcRCCUovgeSyMMIzzf2ndN2w==",
+      "member": "package/dist/infographic.min.js",
+      "file": "antv-infographic.min.js",
+      "global": "AntVInfographic",
+      "repository": "https://github.com/antvis/Infographic",
+      "tarball": "https://registry.npmjs.org/@antv/infographic/-/infographic-0.2.20.tgz",
+      "license": "MIT",
+      "files": [
+        {
+          "file": "antv-infographic.min.js",
+          "source_member": "package/dist/infographic.min.js",
+          "bytes": 877959,
+          "sha256": "2890e658d6018b9ab385b4da9775b917a99e113ea333c59f03e538290e302b13"
+        },
+        {
+          "file": "infographic.LICENSE.txt",
+          "source_member": "package/LICENSE",
+          "bytes": 1061,
+          "sha256": "cacec99fa5f02241b33906689924718962f4991cd6eada3624f56c6bd4f3ff28"
+        }
+      ]
+    },
+    {
+      "name": "@antv/g2",
+      "version": "5.4.8",
+      "slug": "g2",
+      "integrity": "sha512-IvgIpwmT4M5/QAd3Mn2WiHIDeBqFJ4WA2gcZhRRSZuZ2KmgCqZWZwwIT0hc+kIGxwYeDoCQqf//t6FMVu3ryBg==",
+      "member": "package/dist/g2.min.js",
+      "file": "antv-g2.min.js",
+      "global": "G2",
+      "repository": "https://github.com/antvis/G2",
+      "tarball": "https://registry.npmjs.org/@antv/g2/-/g2-5.4.8.tgz",
+      "license": "MIT",
+      "files": [
+        {
+          "file": "antv-g2.min.js",
+          "source_member": "package/dist/g2.min.js",
+          "bytes": 1083414,
+          "sha256": "7e7d346cab68c002a889dc6145bfc1f9ae1391be82ce8d514fb106ef3a6e6412"
+        },
+        {
+          "file": "g2.LICENSE.txt",
+          "source_member": "package/LICENSE",
+          "bytes": 1070,
+          "sha256": "98edde832138822906fb3f365b59a9a54b3abf6e85e52de0f5f1fd804ff83ab7"
+        }
+      ]
+    }
+  ]
+}

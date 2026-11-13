@@ -162,12 +162,28 @@
     mechanism.append(sectionTitle(primaryKind === 'comparison_bars' ? '02' : '01','Как это устроено','Сохранённая схема'));
     const diagram = el('div','fbrief-diagram'), graphButtons = new Map(), pathList = [];
     mechanism.dataset.briefMechanism = graph ? graph.version : 'unavailable';
-    let wireSVG = null, packet = null, resizeObserver = null;
+    let wireSVG = null, packet = null, resizeObserver = null, infographic = null;
+    const infographicHost = el('div','fbrief-infographic-stage'); infographicHost.dataset.state = 'pending';
+    const rendererStatus = el('p','fbrief-renderer-status'), rendererExplanation = el('p','');
+    mechanism.dataset.briefRenderer = 'native_dom_svg';
+    const reportRenderer = ({renderer,reason = ''}) => {
+      if (!state.alive) return;
+      mechanism.dataset.briefRenderer = renderer;
+      const enhanced = renderer === 'antv_infographic';
+      const focusedNode = diagram.contains(document.activeElement) ? document.activeElement?.dataset?.fbriefNode : null;
+      diagram.hidden = enhanced; trace.hidden = enhanced;
+      infographicHost.hidden = !enhanced && infographicHost.dataset.state === 'fallback';
+      rendererStatus.textContent = enhanced ? 'Выберите шаг, чтобы открыть сохранённое основание.' : reason;
+      rendererStatus.hidden = !rendererStatus.textContent;
+      rendererExplanation.textContent = enhanced ? 'Схема построена локально AntV Infographic 0.2.20: последовательность сохранённых операций. Каждый узел ведёт к своему основанию; это иллюстрация механизма, не испытание.' : 'Схема: встроенный HTML/SVG. ' + reason;
+      if (enhanced && focusedNode) [...infographicHost.querySelectorAll('[data-fbrief-node]')].find(node => node.dataset.fbriefNode === focusedNode)?.focus({preventScroll:true});
+    };
     const nodeDetail = el('div','fbrief-node-detail'); nodeDetail.setAttribute('aria-live','polite');
     const graphEvidence = graph ? list(graph.evidence) : [];
     const showNode = id => {
       state.selected = id;
       for (const [key,node] of graphButtons) { node.classList.toggle('is-selected',key === id); node.setAttribute('aria-pressed',String(key === id)); }
+      infographic?.select(id);
       const node = graph?.nodes.find(item => item.id === id); nodeDetail.replaceChildren(); if (!node) return;
       const evidenceIds = new Set(list(node.evidence_ids));
       const evidence = graphEvidence.filter(item => evidenceIds.has(item.id));
@@ -175,6 +191,10 @@
       for (const item of evidence) body.push(el('blockquote','',str(item.excerpt) || 'Точная цитата не сохранена.'),el('p','fbrief-muted',basisNames[item.basis] || 'Основание: ' + (str(item.basis) || 'неизвестно')),link(item.source_url,'Указанный источник ↗'));
       if (!evidence.length) body.push(el('p','','Привязанная цитата для этого узла не сохранена.'));
       nodeDetail.append(details('node-' + id,'Основание шага',body));
+    };
+    const openNode = id => {
+      state.open.add('node-' + id); showNode(id);
+      const detail = nodeDetail.querySelector('details'); if (detail) detail.open = true;
     };
     const stop = () => { if (state.raf !== null) cancelAnimationFrame(state.raf); state.raf = null; state.playing = false; if (packet) packet.setAttribute('visibility','hidden'); };
     const trace = button('Проследить связи →','trace',() => {
@@ -195,7 +215,7 @@
       const markerId = prefix + '-arrow', defs = svg('defs'), marker = svg('marker',{id:markerId,viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:6,markerHeight:6,orient:'auto-start-reverse'});
       marker.append(svg('path',{d:'M 0 1 L 8 5 L 0 9',fill:'none',stroke:'currentColor','stroke-width':1.5})); defs.append(marker); wireSVG.append(defs); diagram.append(wireSVG);
       for (const [index,node] of graph.nodes.entries()) {
-        const b = button('','node-' + node.id,() => { showNode(node.id); const detail = nodeDetail.querySelector('details'); if (detail) detail.open = true; },'fbrief-node'); b.dataset.fbriefNode = node.id;
+        const b = button('','node-' + node.id,() => openNode(node.id),'fbrief-node'); b.dataset.fbriefNode = node.id;
         b.setAttribute('aria-label','Шаг ' + (index + 1) + ': ' + str(node.label));
         append(b,append(el('span','fbrief-node-top'),el('span','fbrief-node-index',String(index + 1).padStart(2,'0')),el('span','fbrief-node-role',roleNames[node.role])),el('span','fbrief-node-label',clip(node.label,85)),el('span','fbrief-node-open','Основание ↗'));
         graphButtons.set(node.id,b); diagram.append(b);
@@ -216,13 +236,22 @@
           const title = svg('title'); title.textContent = str(edge.label) || (edge.kind === 'feedback' ? 'Обратная связь' : 'Сохранённая связь'); path.append(title); wireSVG.insertBefore(path,packet); pathList.push(path);
         }
       };
-      append(mechanism,diagram,append(el('div','fbrief-mechanism-caption'),el('span','',graph.kind === 'process' ? 'Порядок операций · не замер эффекта' : 'Связи из описания · не замер'),graph.edges.length ? trace : null),nodeDetail);
+      append(mechanism,infographicHost,diagram,append(el('div','fbrief-mechanism-caption'),el('span','',graph.kind === 'process' ? 'Порядок операций · иллюстрация, не замер эффекта' : 'Связи из описания · иллюстрация, не замер'),graph.edges.length ? trace : null),rendererStatus,nodeDetail);
       mechanism.append(details('mechanism-notes','Границы схемы',paragraphs([...(list(graph.notes)),str(graph.selection?.reason)])));
       state.selected = graph.nodes.some(node => node.id === state.selected) ? state.selected : graph.nodes[0].id; showNode(state.selected);
       if (globalThis.ResizeObserver) { resizeObserver = new ResizeObserver(drawWires); resizeObserver.observe(diagram); }
       on(globalThis,'resize',drawWires);
       // Layout becomes measurable only after the host is attached below.
       state.drawWires = drawWires;
+      const flowBlock = visual?.block('process_flow');
+      state.mountInfographic = () => {
+        if (flowBlock?.supported_renderer === 'antv_infographic' && globalThis.FrontierInfographic?.mount) {
+          infographic = globalThis.FrontierInfographic.mount(infographicHost,{graph,selected:state.selected,onSelect:openNode,onStatus:reportRenderer,focusNodeId:focusKey?.startsWith('node-') ? focusKey.slice(5) : null});
+        } else {
+          infographicHost.dataset.state = 'fallback';
+          reportRenderer({renderer:'native_dom_svg',reason:flowBlock?.supported_renderer === 'antv_infographic' ? 'Движок схемы не загрузился. Показан сохранённый граф.' : str(flowBlock?.renderer_fallback_reason) || 'Для сохранённых связей выбран встроенный граф.'});
+        }
+      };
     } else {
       append(mechanism,el('div','fbrief-unknown-mechanism','Механизм не восстановлен'),el('p','fbrief-muted','В сохранённом разборе нет схемы технологии с подтверждёнными связями.'),action('Открыть полный разбор','report'));
     }
@@ -266,10 +295,11 @@
       const primary = visual.primary;
       visualExplanation.push(el('p','', 'Выбранный вид: ' + primary.kind + '. ' + str(primary.reason)),
         el('p','', 'Происхождение: ' + (str(primary.provenance?.origin) || 'не указано') + '.'),
-        el('p','', 'Рендерер интерфейса: ' + (str(primary.supported_renderer) || 'native_dom_svg') + ' · встроенные HTML/SVG/CSS адаптеры. Предпочтительный движок: ' + (str(primary.preferred_engine) || 'не указан') + '; здесь он не подключён.'));
+        el('p','', 'Вид выбран по сохранённым данным и доступным основаниям. Новые исследования и испытания для визуализации не запускались.'));
       for (const block of visual.blocks.filter(block => block.selected && block.available && block.id !== primary.id && ['process_flow','comparison_bars','comparison_table'].includes(block.kind))) visualExplanation.push(el('p','',block.kind + ': ' + str(block.reason)));
       for (const choice of list(visual.choices).filter(choice => choice?.status === 'deferred')) visualExplanation.push(el('p','', (str(choice.kind) || 'Отложенный визуал') + ': ' + str(choice.reason)));
     } else visualExplanation.push(el('p','','VisualSpec отсутствует, повреждён или его версия не поддерживается. Запасной вид: ' + primaryKind + '. Использованы сохранённые данные и встроенные HTML/SVG/CSS адаптеры; численные пары проходят прежние проверки оснований.'));
+    if (graph) visualExplanation.push(rendererExplanation);
     root.append(details('visual-choice','Почему этот визуал',visualExplanation,'fbrief-visual-choice'));
     if (!measurements.length) root.append(details('comparison-status','Сравнение · сопоставимые численные результаты не установлены',[comparison],'fbrief-comparison-collapse'));
 
@@ -333,10 +363,11 @@
     host.replaceChildren(root);
     if (state.drawWires) state.drawWires();
     if (focusKey) [...root.querySelectorAll('[data-fbrief-control]')].find(node => node.dataset.fbriefControl === focusKey)?.focus({preventScroll:true});
+    if (state.mountInfographic) state.mountInfographic();
     const instance = {
       snapshot:() => ({runId,selected:state.selected,open:[...root.querySelectorAll('details[open]')].map(node => node.dataset.fbriefDetail),focus:root.contains(document.activeElement) ? document.activeElement?.dataset?.fbriefControl : null}),
-      pause:stop,
-      destroy:() => { if (!state.alive) return; state.alive = false; stop(); abort.abort(); resizeObserver?.disconnect(); root.remove(); instances.delete(host); active.delete(instance); }
+      pause:() => { stop(); infographic?.pause(); },
+      destroy:() => { if (!state.alive) return; state.alive = false; stop(); infographic?.destroy(); abort.abort(); resizeObserver?.disconnect(); root.remove(); instances.delete(host); active.delete(instance); }
     };
     instances.set(host,instance); active.add(instance); return instance;
   }
