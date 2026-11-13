@@ -29,11 +29,22 @@
   function points(topic) { return arr(topic?.trajectory).filter(p => finite(p.year)).slice().sort((a,b) => a.year - b.year); }
   function change(topic) { if (finite(topic?.delta_pp)) return topic.delta_pp; const rows = points(topic); return rows.length && finite(rows[0].share) && finite(rows.at(-1).share) ? rows.at(-1).share - rows[0].share : null; }
 
+  function visualSpec(value, snapshotId) {
+    const spec=obj(value),blocks=arr(spec.blocks),kinds=new Set(['corpus_overview','trend_lines','topic_table','applicability','evidence_ledger']);
+    if(spec.version!=='visual-spec-v1'||spec.subject?.type!=='corpus'||spec.subject.id!==snapshotId||spec.input_binding?.snapshot_id!==snapshotId||!blocks.length||blocks.length>24||new Set(blocks.map(block=>block?.id)).size!==blocks.length)return null;
+    if(blocks.some(block=>!text(block?.id)||!kinds.has(block.kind)||typeof block.selected!=='boolean'||typeof block.available!=='boolean'))return null;
+    const primary=blocks.find(block=>block.id===spec.primary_block_id&&block.selected&&block.available);
+    if(!primary||!['corpus_overview','trend_lines','topic_table'].includes(primary.kind))return null;
+    const trend=blocks.find(block=>block.kind==='trend_lines'&&block.selected&&block.available);
+    if(trend&&!Array.isArray(trend.data?.series))return null;
+    return {...spec,primary,block:kind=>blocks.find(block=>block.kind===kind&&block.selected&&block.available)};
+  }
+
   function mount(host, options = {}) {
     if (!host || typeof host.replaceChildren !== 'function') throw new TypeError('FrontierCorpus.mount: нужен DOM-контейнер.');
     let destroyed = false, data = null, currentTopic = null, currentYear = null, currentCohort = 'numerator',
       currentOffset = 0, currentPaper = null, search = '', loading = false, overviewEpoch = 0,
-      topicEpoch = 0, paperEpoch = 0, allClaims = false, selectedPaperId = null;
+      topicEpoch = 0, paperEpoch = 0, allClaims = false, selectedPaperId = null, visual = null;
     const controllers = new Set();
     const root = el('section', undefined, 'fc-corpus');
     root.dataset.corpusView = 'true'; host.replaceChildren(root);
@@ -44,8 +55,32 @@
     const papersHost = el('section', undefined, 'fc-papers'); papersHost.setAttribute('aria-label', 'Статьи выбранной точки');
     const sourceHost = el('aside', undefined, 'fc-source'); sourceHost.setAttribute('aria-label', 'Статья и импортированные утверждения');
     sourceHost.tabIndex = -1;
-    const searchInput = el('input'); searchInput.type = 'search'; searchInput.placeholder = 'Например: reasoning, retrieval, agents'; searchInput.autocomplete = 'off'; searchInput.setAttribute('aria-label', 'Найти тему по названию или описанию');
+    const searchInput = el('input'); searchInput.type = 'search'; searchInput.placeholder = 'Например: reasoning, retrieval, agents'; searchInput.autocomplete = 'off'; searchInput.dataset.corpusControl='topic-search';searchInput.setAttribute('aria-label', 'Найти тему по названию или описанию');
     let listData = null;
+    const detailStates = new Map();
+    root.addEventListener('toggle',event=>{const node=event.target;if(node.matches?.('details[data-corpus-detail]')&&root.contains(node))detailStates.set(node.dataset.corpusDetail,node.open);},true);
+    function details(key,label,...children) {
+      const node=disclosure(label,...children);node.dataset.corpusDetail=key;node.open=detailStates.get(key)===true;
+      node.querySelector('summary').dataset.corpusControl='detail-'+key;return node;
+    }
+    function rememberDetails() { for(const node of root.querySelectorAll('details[data-corpus-detail]'))detailStates.set(node.dataset.corpusDetail,node.open); }
+    function focusKey() {return root.contains(document.activeElement)?document.activeElement?.dataset?.corpusControl:null;}
+    function restoreFocus(key) {if(key)[...root.querySelectorAll('[data-corpus-control]')].find(node=>node.dataset.corpusControl===key)?.focus({preventScroll:true});}
+    function topicPoints(topic) {
+      const series=visual?.block('trend_lines')?.data?.series;
+      if(series)return points({trajectory:series.find(item=>String(item?.id)===String(topic?.id))?.points});
+      if(visual)return [];
+      return points(topic);
+    }
+    function topicChange(topic) {if(!visual)return change(topic);const rows=topicPoints(topic);return rows.length&&finite(rows[0].share)&&finite(rows.at(-1).share)?rows.at(-1).share-rows[0].share:null;}
+    function visualDisclosure() {
+      if(!visual)return details('visual-choice','Почему этот визуал',el('p','VisualSpec отсутствует, повреждён или его версия не поддерживается. Запасной вид: trend_lines из опубликованной траектории; встроенные HTML/SVG/CSS адаптеры. Неизвестные значения не заменяются нулём.'));
+      const primary=visual.primary,body=[el('p','Выбранный вид: '+primary.kind+'. '+text(primary.reason)),
+        el('p','Происхождение: '+(text(primary.provenance?.origin)||'не указано')+'.'),
+        el('p','Рендерер интерфейса: '+(text(primary.supported_renderer)||'native_dom_svg')+' · встроенные HTML/SVG/CSS адаптеры. Предпочтительный движок: '+(text(primary.preferred_engine)||'не указан')+'; здесь он не подключён.')];
+      for(const choice of arr(visual.choices).filter(choice=>choice?.status==='deferred'))body.push(el('p',(text(choice.kind)||'Отложенный визуал')+': '+text(choice.reason)));
+      return details('visual-choice','Почему этот визуал',...body);
+    }
 
     function setMessage(value) { message.hidden = !value; message.textContent = value || ''; }
     async function read(path) {
@@ -63,7 +98,7 @@
     function cancel() { for (const controller of controllers) controller.abort(); controllers.clear(); }
     function topics() { return arr(data?.topics).filter(topic => Number.isInteger(topic.id)); }
     function topicById(id) { return topics().find(topic => topic.id === id); }
-    function yearPoint() { return points(currentTopic).find(row => row.year === currentYear); }
+    function yearPoint() { return topicPoints(currentTopic).find(row => row.year === currentYear); }
     function setSourceLoading() { sourceHost.replaceChildren(el('span', 'ИСТОЧНИК / ORIGINAL TEXT', 'fc-eyebrow'), el('p', 'Читаем статью и утверждения…', 'fc-muted')); }
     function clearSource() { sourceHost.replaceChildren(el('span', 'ОБСЕРВАТОРИЯ / ИСТОЧНИК', 'fc-eyebrow'), empty('Раскрыть до статьи', 'Выбери работу слева: здесь появятся утверждения, аннотация и первоисточник.')); }
 
@@ -105,12 +140,13 @@
       const needle = search.trim().toLocaleLowerCase('ru-RU');
       const visible = topics().filter(topic => !needle || [topic.name,topic.full_name,topic.description].map(text).join(' ').toLocaleLowerCase('ru-RU').includes(needle));
       const list = el('div', undefined, 'fc-topic-list-scroll');
-      const max = Math.max(1, ...visible.map(topic => finite(points(topic).at(-1)?.share) ? points(topic).at(-1).share : 0));
+      const max = Math.max(1, ...visible.map(topic => finite(topicPoints(topic).at(-1)?.share) ? topicPoints(topic).at(-1).share : 0));
       for (const topic of visible) {
         const item = button('', () => selectTopic(topic.id), 'fc-topic'); item.dataset.topicId = String(topic.id); item.setAttribute('aria-pressed', String(currentTopic?.id === topic.id));
-        const last = points(topic).at(-1), difference = change(topic), differenceNode = el('span', delta(difference), 'fc-topic-change'); differenceNode.dataset.negative = String(difference < 0);
+        const last = topicPoints(topic).at(-1), difference = topicChange(topic), differenceNode = el('span', delta(difference), 'fc-topic-change'); differenceNode.dataset.negative = String(difference < 0);
         const bar = el('span', undefined, 'fc-topic-bar'), fill = el('span'); fill.style.width = (finite(last?.share) ? Math.min(100, Math.max(0, last.share / max * 100)) : 0) + '%'; bar.append(fill);
-        add(item, el('span', topicName(topic), 'fc-topic-title'), add(el('span', undefined, 'fc-topic-bottom'), el('span', percent(last?.share)), differenceNode), bar);
+        const trends=!visual||visual.block('trend_lines');
+        add(item, el('span', topicName(topic), 'fc-topic-title'),trends?add(el('span', undefined, 'fc-topic-bottom'), el('span', percent(last?.share)), differenceNode):null,trends?bar:null);
         list.append(item);
       }
       if (!visible.length) list.append(empty('Тема не найдена', 'Попробуй английское название направления.'));
@@ -118,14 +154,15 @@
     }
 
     function drawTrend() {
-      const topic = currentTopic, rows = points(topic), difference = change(topic);
+      rememberDetails();const focus=focusKey(),topic = currentTopic, rows = topicPoints(topic), difference = topicChange(topic);
       if (!topic) { trendHost.replaceChildren(empty('Выбери направление', 'Показатели раскроются до утверждений и статей.')); return; }
       const changeNode = el('div', delta(difference), 'fc-trend-delta'); changeNode.dataset.negative = String(difference < 0); changeNode.append(el('small', rows.length ? rows[0].year + ' → ' + rows.at(-1).year : 'Изменение доли'));
-      const heading = add(el('div', undefined, 'fc-trend-head'), add(el('div'), el('span', topic.is_noise ? 'ШУМ В АНАЛИТИЧЕСКОЙ ВЫБОРКЕ' : 'ВЫБРАННОЕ НАПРАВЛЕНИЕ', 'fc-eyebrow'), el('h3', text(topic.full_name) || topicName(topic))), changeNode);
+      const trends=!visual||visual.block('trend_lines');
+      const heading = add(el('div', undefined, 'fc-trend-head'), add(el('div'), el('span', topic.is_noise ? 'ШУМ В АНАЛИТИЧЕСКОЙ ВЫБОРКЕ' : 'ВЫБРАННОЕ НАПРАВЛЕНИЕ', 'fc-eyebrow'), el('h3', text(topic.full_name) || topicName(topic))),trends?changeNode:null);
       const plot = el('div', undefined, 'fc-plot');
-      plot.append(add(el('div', undefined, 'fc-plot-kicker'), el('span', 'ДОЛЯ СТАТЕЙ ГОДА'), el('span', 'НАЖМИ ГОД → ИСТОЧНИКИ')));
+      plot.append(add(el('div', undefined, 'fc-plot-kicker'), el('span',trends?'ДОЛЯ СТАТЕЙ ГОДА':'СОХРАНЁННЫЙ СОСТАВ ВЫБОРКИ'), el('span', 'НАЖМИ ГОД → ИСТОЧНИКИ')));
       const valid = rows.filter(row => finite(row.share) && row.share >= 0 && row.share <= 100);
-      if (valid.length) {
+      if (valid.length && (!visual || visual.block('trend_lines'))) {
         const compact = root.clientWidth < 570;
         const width = compact ? 400 : 680, height = 235, left = 32, right = 28, top = 27, bottom = 35, max = Math.max(1, ...valid.map(row => row.share)) * 1.17;
         const x = index => left + (rows.length > 1 ? index / (rows.length - 1) : .5) * (width-left-right);
@@ -139,22 +176,22 @@
         add(chart, svg('path',{d:area,class:'fc-chart-area'}), svg('path',{d:line,class:'fc-chart-line'}));
         rows.forEach((row,index) => {
           const point = coordinates[index]; if (!point) return;
-          const dot = svg('circle',{cx:point[0],cy:point[1],r:6,class:'fc-chart-dot',tabindex:0,role:'button','aria-label':row.year+': '+percent(row.share)+', '+fmt(row.numerator)+' из '+fmt(row.denominator)+' статей','data-selected':String(currentYear===row.year)});
+          const dot = svg('circle',{cx:point[0],cy:point[1],r:6,class:'fc-chart-dot',tabindex:0,role:'button','aria-pressed':String(currentYear===row.year),'aria-label':row.year+': '+percent(row.share)+', '+fmt(row.numerator)+' из '+fmt(row.denominator)+' статей','data-selected':String(currentYear===row.year),'data-corpus-control':'point-'+row.year});
           dot.append(svg('title',{},row.year+': '+fmt(row.numerator)+' / '+fmt(row.denominator)+' · '+percent(row.share)));
           dot.addEventListener('click',()=>selectYear(row.year)); dot.addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)){event.preventDefault();selectYear(row.year);}});
           add(chart, svg('text',{x:point[0],y:point[1]-14,'text-anchor':'middle',class:'fc-chart-value'},percent(row.share)),dot,svg('text',{x:point[0],y:height-9,'text-anchor':'middle',class:'fc-chart-label'},row.year));
         });
         plot.append(chart);
-      } else plot.append(empty('Недостаточно данных для линии', 'Неизвестные значения не заменяются нулём.'));
+      } else if(!valid.length)plot.append(empty('Недостаточно данных для линии', 'Неизвестные значения не заменяются нулём.'));
       const years = el('div', undefined, 'fc-year-grid');
       for (const row of rows) {
-        const year = button('', () => selectYear(row.year), 'fc-year'); year.dataset.corpusYear = String(row.year); year.setAttribute('aria-pressed',String(currentYear===row.year));
+        const year = button('', () => selectYear(row.year), 'fc-year'); year.dataset.corpusYear = String(row.year); year.dataset.corpusControl='year-'+row.year; year.setAttribute('aria-pressed',String(currentYear===row.year));
         add(year,el('strong',row.year),el('span',fmt(row.numerator)+' / '+fmt(row.denominator))); year.setAttribute('aria-label',row.year+': показать '+fmt(row.numerator)+' из '+fmt(row.denominator)+' статей'); years.append(year);
       }
       plot.append(years,el('p','В каждой ячейке: статьи с темой / все статьи аналитической выборки этого года.','fc-chart-note'));
       trendHost.replaceChildren(heading);
       if (text(topic.description)) trendHost.append(el('p',topic.description,'fc-topic-description'));
-      trendHost.append(plot);
+      const why=visualDisclosure();why.classList.add('fc-visual-choice');trendHost.append(plot,why);restoreFocus(focus);
     }
 
     function drawPapers(isLoading = false) {
@@ -181,6 +218,7 @@
     }
 
     function drawSource() {
+      rememberDetails();
       if (!currentPaper) { clearSource(); return; }
       const paper=obj(currentPaper.paper), claims=arr(currentPaper.claims);
       const matching=claims.filter(claim=>claim.topic_id===currentTopic?.id);
@@ -197,49 +235,52 @@
         const current=claim.topic_id===currentTopic?.id;
         add(item,add(el('div',undefined,'fc-claim-index'),el('span',String(index+1).padStart(2,'0')+(current?' / ВЫБРАННАЯ ТЕМА':'')),el('span',topicLabel)),el('p',text(claim.text)||'Текст не опубликован'));
         const proof=el('p',text(claim.supporting_quote)||'Без точной цитатной привязки','fc-claim-proof');proof.dataset.missing=String(!text(claim.supporting_quote));item.append(proof);
-        const details=disclosure('Происхождение утверждения',facts([['Модель извлечения',claim.extractor_model],['Версия промпта',claim.prompt_hash],['Claim ID',claim.claim_id],['Статус','Импортировано, независимо не проверено']]));item.append(details);group.append(item);
+        const proofDetails=details('claim-'+text(paper.paper_id)+'-'+text(claim.claim_id),'Происхождение утверждения',facts([['Модель извлечения',claim.extractor_model],['Версия промпта',claim.prompt_hash],['Claim ID',claim.claim_id],['Статус','Импортировано, независимо не проверено']]));item.append(proofDetails);group.append(item);
       }
       if(!claims.length)group.append(el('p','В опубликованном извлечении нет утверждений для этой статьи. Это не означает отсутствие научного вклада.','fc-muted'));
       heading.append(group);
       if(ordered.length>3)heading.append(button(allClaims?'Свернуть утверждения':'Показать все '+fmt(ordered.length)+' утверждений',()=>{allClaims=!allClaims;drawSource();},'fc-text-button'));
-      sourceHost.append(heading,disclosure('Аннотация статьи · EN',el('p',text(paper.abstract)||'Аннотация в снимке отсутствует.')));
+      sourceHost.append(heading,details('abstract-'+text(paper.paper_id),'Аннотация статьи · EN',el('p',text(paper.abstract)||'Аннотация в снимке отсутствует.')));
     }
 
-    async function selectPaper(id, focus = false) {
+    async function selectPaper(id, focus = false, preserve = false) {
       if (!id || destroyed) return;
-      const epoch=++paperEpoch;selectedPaperId=id;currentPaper=null;allClaims=false;drawPapers();setSourceLoading();
+      rememberDetails();const epoch=++paperEpoch;selectedPaperId=id;currentPaper=null;if(!preserve)allClaims=false;drawPapers();setSourceLoading();
       try {
         const value=await read('/api/corpus/papers/'+encodeURIComponent(id));
         if(destroyed||epoch!==paperEpoch)return;currentPaper=value;drawSource();
         if(focus){sourceHost.focus({preventScroll:true});if(matchMedia('(max-width:1200px)').matches)sourceHost.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
       } catch(error) { if(destroyed||epoch!==paperEpoch||error.name==='AbortError')return;sourceHost.replaceChildren(empty('Источник не прочитан',error.message)); }
     }
-    async function loadPapers() {
+    async function loadPapers(preserve = false) {
       if(!currentTopic||!currentYear||destroyed)return;
-      const epoch=++topicEpoch;++paperEpoch;selectedPaperId=null;currentPaper=null;listData=null;drawPapers(true);clearSource();
+      rememberDetails();const previousId=preserve?selectedPaperId:null,epoch=++topicEpoch;++paperEpoch;selectedPaperId=previousId;currentPaper=null;listData=null;drawPapers(true);clearSource();
       const path='/api/corpus/topics/'+currentTopic.id+'?'+new URLSearchParams({year:String(currentYear),offset:String(currentOffset),limit:'20',cohort:currentCohort});
       try {
         const value=await read(path);if(destroyed||epoch!==topicEpoch)return;
-        listData=value;drawPapers();if(arr(value.items).length)selectPaper(text(value.items[0].paper_id));
+        listData=value;drawPapers();if(arr(value.items).length){const id=arr(value.items).some(item=>text(item.paper_id)===previousId)?previousId:text(value.items[0].paper_id);selectPaper(id,false,preserve&&id===previousId);}
       } catch(error) { if(destroyed||epoch!==topicEpoch||error.name==='AbortError')return;papersHost.replaceChildren(empty('Статьи не прочитаны',error.message)); }
     }
-    function selectYear(year) { if(destroyed||!points(currentTopic).some(row=>row.year===year))return;currentYear=year;currentOffset=0;currentCohort='numerator';drawTrend();loadPapers(); }
+    function selectYear(year) { if(destroyed||!topicPoints(currentTopic).some(row=>row.year===year))return;currentYear=year;currentOffset=0;currentCohort='numerator';drawTrend();loadPapers(); }
     function selectTopic(id) {
       const topic=topicById(id);if(!topic||destroyed)return;currentTopic=topic;currentOffset=0;currentCohort='numerator';
-      if(!points(topic).some(row=>row.year===currentYear))currentYear=points(topic).at(-1)?.year||null;
+      if(!topicPoints(topic).some(row=>row.year===currentYear))currentYear=topicPoints(topic).at(-1)?.year||null;
       drawTopics();drawTrend();loadPapers();
     }
     async function refresh() {
-      if(destroyed)return;cancel();const epoch=++overviewEpoch;++topicEpoch;++paperEpoch;loading=true;setMessage('');
-      root.replaceChildren(message,el('p','Читаем опубликованный корпус и пересчитанные тренды…','fc-loading'));
+      if(destroyed)return;rememberDetails();cancel();const focus=focusKey(),epoch=++overviewEpoch;++topicEpoch;++paperEpoch;loading=true;setMessage('');
+      if(!data)root.replaceChildren(message,el('p','Читаем опубликованный корпус и пересчитанные тренды…','fc-loading'));
       try {
-        const value=await read('/api/corpus');if(destroyed||epoch!==overviewEpoch)return;data=value;
+        const value=await read('/api/corpus');if(destroyed||epoch!==overviewEpoch)return;data=value;visual=visualSpec(value.visual_spec,value.corpus?.snapshot_id);
+        root.dataset.corpusVisualSpec=visual?.version||'fallback';root.dataset.corpusVisualKind=visual?.primary.kind||'trend_lines';
         if(value.available!==true){root.replaceChildren(empty('Корпус ещё не импортирован',text(value.message)||'Импорт готовых данных подключается отдельно. Модельные вызовы для него не нужны.'));return;}
         drawOverview();
         const layout=add(el('div',undefined,'fc-layout'),topicsHost,add(el('div',undefined,'fc-main'),trendHost,add(el('div',undefined,'fc-evidence'),papersHost,sourceHost)));
         content.replaceChildren(layout);root.replaceChildren(message,overview,content,methods);
         const selected=topicById(currentTopic?.id)||topics().filter(topic=>!topic.is_noise).sort((a,b)=>(change(b)||0)-(change(a)||0))[0]||topics()[0];
-        if(selected)selectTopic(selected.id);else{drawTopics();drawTrend();clearSource();}
+        if(selected&&selected.id===currentTopic?.id&&topicPoints(selected).some(row=>row.year===currentYear)){
+          currentTopic=selected;drawTopics();drawTrend();loadPapers(true);restoreFocus(focus);
+        }else if(selected)selectTopic(selected.id);else{drawTopics();drawTrend();clearSource();}
       } catch(error) { if(destroyed||epoch!==overviewEpoch||error.name==='AbortError')return;root.replaceChildren(empty('Корпус недоступен',error.message),button('Повторить чтение',refresh)); }
       finally { if(epoch===overviewEpoch)loading=false; }
     }

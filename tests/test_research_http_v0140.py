@@ -52,6 +52,10 @@ class ResearchHTTPTests(unittest.TestCase):
             status, pending = self.request('GET', '/api/runs/' + run['id'] + '/research')
             self.assertEqual(status, 200)
             self.assertIsNone(pending['public_preview'])
+            self.assertEqual(pending['visual_spec']['version'], 'visual-spec-v1')
+            self.assertFalse(any(block['selected'] and block['kind'] in
+                                 {'process_flow', 'comparison_bars'}
+                                 for block in pending['visual_spec']['blocks']))
         self.assertEqual(self.app.store.export()['tables'], before)
         status, script = self.request('GET', '/assets/research.js')
         self.assertEqual(status, 200)

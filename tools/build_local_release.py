@@ -23,6 +23,7 @@ PUBLIC_DOCS = {
     'docs/getting-started.md', 'docs/pilot.md', 'docs/operations.md',
     'docs/architecture.md', 'docs/research-evidence.md', 'docs/research/lexical-pilot.md',
     'docs/research/drift-corpus.md',
+    'docs/research/visual-spec.md',
 }
 PREFIXES = ('laboratory/', 'tests/', 'tools/', 'deliverables/',
             'docs/releases/', '.github/')

@@ -17,6 +17,14 @@ class CorpusHTTPTests(ResearchHTTPTests):
                      '/api/corpus/papers/2020.emnlp-main.1'):
             status, result = self.request('GET', path)
             self.assertEqual(status, 200, result)
+            if path == '/api/corpus':
+                spec = result['visual_spec']
+                self.assertEqual(spec['version'], 'visual-spec-v1')
+                primary = next(block for block in spec['blocks']
+                               if block['id'] == spec['primary_block_id'])
+                self.assertEqual(primary['kind'], 'trend_lines')
+                again = self.request('GET', path)[1]['visual_spec']
+                self.assertEqual(again, spec)
         self.assertEqual(self.app.store.export()['tables'], before)
         self.assertEqual(self.app.jobs, {})
         for asset in ('corpus.js', 'corpus.css'):

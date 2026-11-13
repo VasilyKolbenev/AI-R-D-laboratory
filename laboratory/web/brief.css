@@ -30,6 +30,7 @@
 .fbrief-proof-warning {color:#865539;}
 .fbrief-proof .fbrief-button {margin-top:5px;}
 .fbrief-main-grid {display:grid;grid-template-columns:minmax(0,1.27fr) minmax(0,1fr);gap:15px;}
+.fbrief-main-grid-single {grid-template-columns:minmax(0,1fr);}
 .fbrief-panel {min-width:0;border:1px solid var(--fb-line);border-radius:4px;padding:20px;background:#f7f6ef;}
 .fbrief-section-heading {display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:19px;}
 .fbrief-section-number {color:#7b8b63;}
@@ -61,6 +62,12 @@
 .fbrief-unknown-metric span {font-size:10px;color:#566348;}
 .fbrief-unknown-metric strong {font:30px/1 Consolas,monospace;font-weight:400;color:#889775;}
 .fbrief-unknown-metric small {font-size:9px;color:#7c876d;}
+.fbrief-unknown-list {margin:14px 0;padding-left:18px;color:var(--fb-muted);font-size:12px;line-height:1.7;}
+.fbrief-comparison-collapse > .fbrief-detail-body {display:block;}
+.fbrief-comparison-collapse .fbrief-comparison {padding:15px;background:transparent;}
+.fbrief-comparison-collapse .fbrief-no-comparison {max-width:none;font-size:17px;letter-spacing:-.3px;}
+.fbrief-comparison-collapse > summary,.fbrief-visual-choice > summary {font-size:11px;}
+.fbrief-visual-choice .fbrief-detail-body {font-size:11px;max-width:950px;}
 .fbrief-comparison-foot {display:flex;gap:8px;flex-wrap:wrap;font-size:10px;line-height:1.4;}
 .fbrief-comparison-foot span {background:#e6e8dd;padding:5px 7px;border-radius:2px;color:#58634c;}
 .fbrief-metric + .fbrief-metric {border-top:1px solid var(--fb-line);padding-top:14px;margin-top:14px;}
