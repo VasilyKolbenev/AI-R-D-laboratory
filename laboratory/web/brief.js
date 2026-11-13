@@ -32,6 +32,15 @@
   const stageNames = {source_review:'Разбор источников',incomplete:'Данных недостаточно',validation_designed:'Проверка спроектирована',externally_evaluated:'Есть внешние сравнения',locally_evaluated:'Есть локальные результаты'};
   let serial = 0;
 
+  function visualSpec(value, runId) {
+    const spec = obj(value), blocks = list(spec.blocks), kinds = new Set(['task_context','process_flow','comparison_bars','comparison_table','applicability','evidence_ledger']);
+    if (spec.version !== 'visual-spec-v1' || spec.subject?.type !== 'run' || spec.subject.id !== runId || spec.input_binding?.run_id !== runId || !blocks.length || blocks.length > 24 || new Set(blocks.map(block => block?.id)).size !== blocks.length) return null;
+    if (blocks.some(block => !str(block?.id) || !kinds.has(block.kind) || typeof block.selected !== 'boolean' || typeof block.available !== 'boolean')) return null;
+    const primary = blocks.find(block => block.id === spec.primary_block_id && block.selected && block.available);
+    if (!primary || !['task_context','process_flow','comparison_bars'].includes(primary.kind)) return null;
+    return {...spec,primary,block:kind => blocks.find(block => block.kind === kind && block.selected && block.available)};
+  }
+
   function savedGraph(presentation) {
     const graph = obj(presentation.motion_story), ids = new Set();
     if (graph.version !== 'dataflow-v1' || !list(graph.nodes).length || graph.nodes.length > 12 || !Array.isArray(graph.edges) || graph.edges.length > 16) return null;
@@ -60,6 +69,13 @@
     return result;
   }
 
+  function specMeasurements(block) {
+    // The server selects rows. These checks only protect the renderer from malformed data.
+    return list(block?.data?.rows).filter(value => value?.chart_eligible === true && value.source_bound_pair === true && value.comparability === 'comparable' &&
+      [value.baseline,value.candidate].every(side => finite(side?.value) && ['author_claim','external_measurement'].includes(side.basis) && str(side.label)))
+      .slice(0,3).map(value => ({...value,dimensionLabel:str(value.label)}));
+  }
+
   function mount(host, props = {}) {
     if (!host || typeof host.replaceChildren !== 'function') return null;
     const prior = instances.get(host), previous = prior?.snapshot();
@@ -85,7 +101,8 @@
     const action = (label, name, cls = '') => button(label,'action-' + name,() => act(name),cls);
     const details = (key, label, children, cls = '') => {
       const node = el('details','fbrief-details ' + cls); node.dataset.fbriefDetail = key; node.dataset.briefDetail = key; node.open = state.open.has(key);
-      append(node,el('summary','',label),append(el('div','fbrief-detail-body'),children));
+      const summary = el('summary','',label); summary.dataset.fbriefControl = 'detail-' + key;
+      append(node,summary,append(el('div','fbrief-detail-body'),children));
       on(node,'toggle',() => { if (node.open) state.open.add(key); else state.open.delete(key); }); return node;
     };
     const paragraphs = values => meaningful(values).map(value => el('p','',value));
@@ -121,7 +138,15 @@
     const fetched = sources.filter(source => source?.origin === 'fetched' && source.status === 'captured' && list(source.segments).length);
     const supplied = sources.some(source => source?.kind === 'supplied_text' && source.status === 'captured');
     const sourceLabel = fetched.length ? 'Сохранённый источник' : supplied ? 'Переданный пересказ' : 'Основание не подтверждено';
-    const measurements = eligibleMeasurements(research), tests = finite(provenance.executed_technology_tests) ? provenance.executed_technology_tests : null;
+    let visual = visualSpec(research.visual_spec, runId);
+    let graph = visual ? savedGraph({motion_story:visual.block('process_flow')?.data?.graph}) : savedGraph(p);
+    let measurements = visual ? specMeasurements(visual.block('comparison_bars')) : eligibleMeasurements(research);
+    if (visual && ((visual.primary.kind === 'process_flow' && !graph) || (visual.primary.kind === 'comparison_bars' && !measurements.length))) {
+      visual = null; graph = savedGraph(p); measurements = eligibleMeasurements(research);
+    }
+    const primaryKind = visual?.primary.kind || (measurements.length ? 'comparison_bars' : graph ? 'process_flow' : 'task_context');
+    root.dataset.briefVisualSpec = visual?.version || 'fallback'; root.dataset.briefVisualKind = primaryKind;
+    const tests = finite(provenance.executed_technology_tests) ? provenance.executed_technology_tests : null;
     const hero = el('header','fbrief-hero'), lead = el('div','fbrief-lead'), title = el('h2','fbrief-title',str(p.title) || runTitle(run)); title.id = headingId;
     append(lead,el('div','fbrief-kicker','СТАТЬЯ → ЗАДАЧА → ПРОВЕРКА'),title);
     const problem = str(p.problem) || str(p.summary);
@@ -134,8 +159,8 @@
 
     const grid = el('div','fbrief-main-grid'), mechanism = el('article','fbrief-mechanism fbrief-panel');
     const sectionTitle = (number, title, suffix) => append(el('div','fbrief-section-heading'),el('span','fbrief-section-number',number),el('h3','',title),suffix ? el('span','fbrief-section-note',suffix) : null);
-    mechanism.append(sectionTitle('01','Как это устроено','Сохранённая схема'));
-    const graph = savedGraph(p), diagram = el('div','fbrief-diagram'), graphButtons = new Map(), pathList = [];
+    mechanism.append(sectionTitle(primaryKind === 'comparison_bars' ? '02' : '01','Как это устроено','Сохранённая схема'));
+    const diagram = el('div','fbrief-diagram'), graphButtons = new Map(), pathList = [];
     mechanism.dataset.briefMechanism = graph ? graph.version : 'unavailable';
     let wireSVG = null, packet = null, resizeObserver = null;
     const nodeDetail = el('div','fbrief-node-detail'); nodeDetail.setAttribute('aria-live','polite');
@@ -202,7 +227,7 @@
       append(mechanism,el('div','fbrief-unknown-mechanism','Механизм не восстановлен'),el('p','fbrief-muted','В сохранённом разборе нет схемы технологии с подтверждёнными связями.'),action('Открыть полный разбор','report'));
     }
 
-    const comparison = el('article','fbrief-comparison fbrief-panel'); comparison.append(sectionTitle('02','Что меняется','Baseline → технология'));
+    const comparison = el('article','fbrief-comparison fbrief-panel'); comparison.append(sectionTitle(primaryKind === 'comparison_bars' ? '01' : '02','Что меняется','Baseline → технология'));
     if (measurements.length) {
       for (const [index,m] of measurements.entries()) {
         const card = el('div','fbrief-metric'), min = Math.min(0,m.baseline.value,m.candidate.value), max = Math.max(0,m.baseline.value,m.candidate.value), range = max - min || 1;
@@ -219,8 +244,8 @@
       }
     } else {
       append(comparison,el('strong','fbrief-no-comparison','Численного сравнения нет'));
-      const unknowns = el('div','fbrief-unknown-metrics');
-      for (const key of ['quality','latency','cost']) { const value = obj(readiness.comparison_dimensions?.[key]), card = el('div','fbrief-unknown-metric'); card.dataset.briefMetric = key; card.dataset.briefUnknown = 'true'; card.setAttribute('aria-label',(str(value.label) || key) + ': сопоставимый результат не установлен'); append(unknowns,append(card,el('span','',str(value.label) || ({quality:'Качество',latency:'Задержка',cost:'Стоимость'}[key])),el('strong','','?'))); }
+      const unknowns = el('ul','fbrief-unknown-list');
+      for (const key of ['quality','latency','cost']) { const value = obj(readiness.comparison_dimensions?.[key]), card = el('li','', (str(value.label) || ({quality:'Качество',latency:'Задержка',cost:'Стоимость'}[key])) + ': сопоставимый результат не установлен.'); card.dataset.briefMetric = key; card.dataset.briefUnknown = 'true'; unknowns.append(card); }
       comparison.append(unknowns);
     }
     const baseline = obj(p.motion_story?.baseline), baselineKnown = ['reported','conceptual'].includes(baseline.status) && !placeholder(baseline.label);
@@ -229,7 +254,24 @@
     append(comparison,append(el('div','fbrief-comparison-foot'),el('span','',baselineText),el('span','',conditionsRecorded ? 'Условия задачи записаны' : 'Общие условия не зафиксированы')));
     const comparisonDetails = [!measurements.length ? 'Нет пары значений с общими условиями и привязанными основаниями.' : '',str(baseline.note),str(p.use_case),...meaningful(p.applied_analysis?.unknowns)];
     comparison.append(details('comparison','С чем и при каких условиях сравнивать',paragraphs(comparisonDetails)));
-    append(grid,mechanism,comparison); root.append(grid);
+    if (measurements.length) {
+      if (primaryKind === 'comparison_bars') append(grid,comparison,graph ? mechanism : null);
+      else append(grid,mechanism,comparison);
+      if (!graph) grid.classList.add('fbrief-main-grid-single');
+    } else { grid.append(mechanism); grid.classList.add('fbrief-main-grid-single'); }
+    if (visual && primaryKind === 'task_context' && !graph && !measurements.length) grid.hidden = true;
+    grid.dataset.briefPrimary = primaryKind; root.append(grid);
+    const visualExplanation = [];
+    if (visual) {
+      const primary = visual.primary;
+      visualExplanation.push(el('p','', 'Выбранный вид: ' + primary.kind + '. ' + str(primary.reason)),
+        el('p','', 'Происхождение: ' + (str(primary.provenance?.origin) || 'не указано') + '.'),
+        el('p','', 'Рендерер интерфейса: ' + (str(primary.supported_renderer) || 'native_dom_svg') + ' · встроенные HTML/SVG/CSS адаптеры. Предпочтительный движок: ' + (str(primary.preferred_engine) || 'не указан') + '; здесь он не подключён.'));
+      for (const block of visual.blocks.filter(block => block.selected && block.available && block.id !== primary.id && ['process_flow','comparison_bars','comparison_table'].includes(block.kind))) visualExplanation.push(el('p','',block.kind + ': ' + str(block.reason)));
+      for (const choice of list(visual.choices).filter(choice => choice?.status === 'deferred')) visualExplanation.push(el('p','', (str(choice.kind) || 'Отложенный визуал') + ': ' + str(choice.reason)));
+    } else visualExplanation.push(el('p','','VisualSpec отсутствует, повреждён или его версия не поддерживается. Запасной вид: ' + primaryKind + '. Использованы сохранённые данные и встроенные HTML/SVG/CSS адаптеры; численные пары проходят прежние проверки оснований.'));
+    root.append(details('visual-choice','Почему этот визуал',visualExplanation,'fbrief-visual-choice'));
+    if (!measurements.length) root.append(details('comparison-status','Сравнение · сопоставимые численные результаты не установлены',[comparison],'fbrief-comparison-collapse'));
 
     const quick = el('div','fbrief-quick-grid');
     const quickCard = (key, icon, title, values, fallback, cls = '') => {

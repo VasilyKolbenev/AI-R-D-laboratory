@@ -8,7 +8,10 @@ def handle_get(handler, path):
         return False
     corpus = handler.app.corpus
     if path == '/api/corpus':
-        handler.send(corpus.overview())
+        from .visual_spec import build_corpus_spec
+        result = corpus.overview()
+        result['visual_spec'] = build_corpus_spec(result)
+        handler.send(result)
         return True
     query = parse_qs(urlsplit(handler.path).query)
 

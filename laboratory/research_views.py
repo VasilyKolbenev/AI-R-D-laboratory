@@ -40,6 +40,7 @@ def run_view(store, run, presentation):
     from .research_evaluation import Evaluation
     from .research_public import preview
     from .research_readiness import assess
+    from .visual_spec import build_run_spec
     presentation = presentation if isinstance(presentation, dict) else {}
     bundle = run.get('plan', {}).get('evidence_bundle') or {}
     documents = bundle.get('documents') or []
@@ -47,15 +48,18 @@ def run_view(store, run, presentation):
     selected = workbench.selected([run['id']])
     measurements = (selected.get('measurements', [])
                     if isinstance(selected, dict) else selected)
+    sources = [source_view(item) for item in documents]
+    readiness = assess(run, presentation, measurements=measurements)
     return {
-        'sources': [source_view(item) for item in documents],
+        'sources': sources,
         'evidence': deepcopy(presentation.get('source_validation') or {
             'status': 'pending' if run.get('status') == 'planned' else 'legacy',
             'checks': [], 'issues': [],
             'notice': 'Привязка выводов к сохранённому оригиналу пока не зафиксирована.'}),
         'measurements': measurements,
         'measurement_assets': deepcopy(measurements),
-        'readiness': assess(run, presentation, measurements=measurements),
+        'readiness': readiness,
+        'visual_spec': build_run_spec(run, presentation, readiness, sources=sources),
         'recipe': workbench.recipe(run, presentation),
         'evaluation': Evaluation(store).summary(run['id']),
         'public_preview': preview(presentation) if presentation.get('title') else None,

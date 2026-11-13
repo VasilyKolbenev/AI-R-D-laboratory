@@ -1,4 +1,4 @@
-VV Frontier · AI R&D Laboratory v0.21.0-alpha.2
+VV Frontier · AI R&D Laboratory v0.21.0-alpha.3
 Локальная альфа для Windows x64, один владелец.
 
 ПЕРВЫЙ ЗАПУСК

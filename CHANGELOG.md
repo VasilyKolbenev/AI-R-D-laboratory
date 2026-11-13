@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.21.0-alpha.3 · 2026-11-13
+
+- VisualSpec binds an automatic, deterministic visual plan to the exact saved
+  report or corpus snapshot. No routing model, research or external call is used.
+- Evidence-eligible comparisons take priority; saved conceptual mechanisms and
+  reproducible corpus prevalence trends have separate explicit provenance.
+- Brief and corpus views consume the shared contract and explain their selection.
+  Missing comparisons, relation graphs, simulations and videos are not fabricated.
+- Preferred visualization engines and the currently available native renderers
+  are distinct. Third-party skill kits/libraries are not installed by this update.
+
 ## v0.21.0-alpha.2 · 2026-11-13
 
 - A concise visual brief opens by default: problem, saved mechanism, applicability,
