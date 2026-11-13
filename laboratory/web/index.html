@@ -11,9 +11,11 @@
   <link rel="stylesheet" href="/assets/reactor.css">
   <link rel="stylesheet" href="/assets/observatory.css">
   <link rel="stylesheet" href="/assets/frontier-shell.css">
+  <link rel="stylesheet" href="/assets/brief.css">
   <script src="/assets/research.js" defer></script>
   <script src="/assets/reactor.js" defer></script>
   <script src="/assets/observatory.js" defer></script>
+  <script src="/assets/brief.js" defer></script>
   <script src="/assets/frontier-live.js" defer></script>
   <script src="/assets/app.js" defer></script>
 </head>
@@ -24,22 +26,26 @@
       <a class="brand" href="/" aria-label="VV Frontier — главная"><span class="brand-mark" aria-hidden="true">⋈</span><span>VV Frontier<small>RESEARCH / IN PRACTICE</small></span></a>
       <div class="workspace-label">Личная лаборатория</div>
       <nav class="navigation" aria-label="Разделы лаборатории">
-        <button class="nav-button active" data-view="reactor" data-frontier-only aria-current="page"><span class="nav-icon" aria-hidden="true">◎</span>Реактор</button>
-        <button class="nav-button" data-view="observatory" data-frontier-only><span class="nav-icon" aria-hidden="true">◉</span>Обсерватория</button>
+        <button class="nav-button active" data-view="brief" data-frontier-only aria-current="page"><span class="nav-icon" aria-hidden="true">◈</span>Суть</button>
         <button class="nav-button" data-view="inbox"><span class="nav-icon" aria-hidden="true">↙</span>Входящие<span class="count" id="count-sources">0</span></button>
-        <button class="nav-button" data-view="runs"><span class="nav-icon" aria-hidden="true">◎</span>Исследования<span class="count" id="count-runs">0</span></button>
-        <button class="nav-button" data-view="tasks"><span class="nav-icon" aria-hidden="true">▤</span>Задачи<span class="count" id="count-tasks">0</span></button>
-        <button class="nav-button" data-view="knowledge"><span class="nav-icon" aria-hidden="true">◇</span>База знаний<span class="count" id="count-knowledge">0</span></button>
-        <button class="nav-button" data-view="research"><span class="nav-icon" aria-hidden="true">▥</span>Методика и проверки</button>
-        <button class="nav-button" data-view="settings"><span class="nav-icon" aria-hidden="true">⚙</span>Настройки</button>
+        <button class="nav-button" data-view="runs"><span class="nav-icon" aria-hidden="true">◎</span>Архив<span class="count" id="count-runs">0</span></button>
+        <button class="nav-button" data-view="knowledge" data-read-workbench="knowledge"><span class="nav-icon" aria-hidden="true">◇</span>Знания<span class="count" id="count-knowledge">0</span></button>
+        <details class="nav-tools"><summary>Инструменты <span aria-hidden="true">⌄</span></summary><div class="nav-tools-menu">
+          <button class="nav-button" data-view="reactor" data-frontier-only><span class="nav-icon" aria-hidden="true">◎</span>Реактор</button>
+          <button class="nav-button" data-view="observatory" data-frontier-only><span class="nav-icon" aria-hidden="true">◉</span>Обсерватория</button>
+          <button class="nav-button" data-view="tasks"><span class="nav-icon" aria-hidden="true">▤</span>Задачи<span class="count" id="count-tasks">0</span></button>
+          <button class="nav-button" data-view="research"><span class="nav-icon" aria-hidden="true">▥</span>Методика и проверки</button>
+          <button class="nav-button" data-view="settings"><span class="nav-icon" aria-hidden="true">⚙</span>Настройки</button>
+        </div></details>
       </nav>
       <div class="side-note"><span class="status-dot"></span> На вашем компьютере<p>Материалы и отчёты сохраняются локально. Исследования — только по вашей команде.</p><span class="version" id="version">Локальная версия</span></div>
     </aside>
     <main class="workspace">
-      <header class="topbar"><span>Реальные данные · исследования по вашей команде</span><a href="/workbench/#corpus">Научный корпус ↗</a><a href="/workbench/">Исследовательский стол ↗</a><a href="/classic">Расширенный вид ↗</a><button class="text-button" id="refresh-button" type="button">Обновить ↻</button></header>
+      <header class="topbar"><span>VV Frontier / Лаборатория</span><a href="/workbench/#corpus">Научный корпус ↗</a><a href="/workbench/#compare">Сравнить исследования ↗</a><button class="text-button" id="refresh-button" type="button">Обновить ↻</button></header>
       <div id="connection-error" class="notice error" role="alert" hidden></div>
       <div id="frontier-state" class="notice" role="status" hidden></div>
-      <section class="view" id="view-reactor" aria-label="Реактор исследования"><div id="reactor-workspace"><p class="loading-message">Открываем исследовательскую лабораторию…</p></div></section>
+      <section class="view" id="view-brief" aria-label="Исследование за две минуты"><div id="brief-workspace"><p class="loading-message">Открываем исследование…</p></div></section>
+      <section class="view" id="view-reactor" hidden aria-label="Реактор исследования"><div id="reactor-workspace"></div></section>
       <section class="view" id="view-observatory" hidden aria-label="Обсерватория доказательств"><div id="observatory-workspace"></div></section>
 
       <section class="view" id="view-research" hidden aria-label="Доказательства и проверки"><div id="research-workspace"></div></section>

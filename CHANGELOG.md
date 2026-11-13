@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.21.0-alpha.2 · 2026-11-13
+
+- A concise visual brief opens by default: problem, saved mechanism, applicability,
+  constraints and comparison evidence, with complete text available on demand.
+- Numeric comparison charts require the existing source-bound `chart_eligible`
+  projection. Missing results stay unknown; contextual memory links are not baselines.
+- Secondary tools move into a disclosure. Reactor, Observatory, the detailed report,
+  corpus and existing approval/publication workflows remain accessible.
+
 ## v0.21.0-alpha.1 · 2026-11-13
 
 - Optional pinned Drift Inspector corpus: papers, external contribution claims,

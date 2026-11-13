@@ -7,7 +7,7 @@ document.body?.classList?.toggle('frontier-live', !classicView);
 if(classicView)$$('[data-frontier-only]').forEach(element=>{element.hidden=true;});
 let runSelection = 0;
 let lastFrontierPoll = 0;
-const state = {csrf: '', bootstrap: null, sources: [], runs: [], knowledge: [], selected: new Set(), sourceId: null, runId: null, pendingPlan: null, view: classicView?'inbox':globalThis.location&&new URL(location.href).searchParams.get('mode')==='evidence'?'observatory':'reactor', saveRunId: null, pollBusy: false, memoryData:null, memoryPreview:null, memoryOptions:null, memoryRebuilding:false, memoryBlocked:false, memoryEdit:null, studySchema:null,tasks:[],taskDraft:null,autoTaskQuestion:'',lessons:[],lessonSchema:null,lessonDraft:null,lessonEvidenceRun:null};
+const state = {csrf: '', bootstrap: null, sources: [], runs: [], knowledge: [], selected: new Set(), sourceId: null, runId: null, pendingPlan: null, view: classicView?'inbox':globalThis.location&&new URL(location.href).searchParams.get('mode')==='evidence'?'observatory':new URL(location.href).searchParams.get('mode')==='reactor'?'reactor':'brief', saveRunId: null, pollBusy: false, memoryData:null, memoryPreview:null, memoryOptions:null, memoryRebuilding:false, memoryBlocked:false, memoryEdit:null, studySchema:null,tasks:[],taskDraft:null,autoTaskQuestion:'',lessons:[],lessonSchema:null,lessonDraft:null,lessonEvidenceRun:null};
 const activeStatuses = new Set(['running', 'queued']);
 const statusNames = {planned: 'Ждёт вашего апрува', queued: 'В очереди', running: 'Исследуется', completed: 'Готово', failed: 'Не завершено', outcome_unknown: 'Исход уточняется', unknown: 'Исход уточняется', cancelled: 'Остановлено', canceled: 'Остановлено', interrupted: 'Прервано'};
 let toastTimer;
@@ -81,7 +81,14 @@ async function busy(element, work) { const disabled = element.disabled; element.
 function switchView(view) {
   if (view !== 'runs') stopStoryboard();
   state.view = view;
-  if (['reactor','observatory'].includes(view)) globalThis.FrontierLive?.enter(view).catch(showError);
+  document.body.classList.toggle('frontier-brief', !classicView && view === 'brief');
+  document.querySelector('.nav-tools')?.removeAttribute('open');
+  if(!classicView&&['brief','reactor','observatory'].includes(view)){
+    const address=new URL(location.href);
+    if(view==='brief')address.searchParams.delete('mode');else address.searchParams.set('mode',view==='observatory'?'evidence':'reactor');
+    history.replaceState(null,'',address);
+  }
+  if (['brief','reactor','observatory'].includes(view)) globalThis.FrontierLive?.enter(view).catch(showError);
   else globalThis.FrontierLive?.leave();
   $$('.view').forEach(element => {element.hidden = element.id !== 'view-' + view;});
   $$('.nav-button').forEach(element => {const active = element.dataset.view === view; element.classList.toggle('active', active); if (active) element.setAttribute('aria-current', 'page'); else element.removeAttribute('aria-current');});
@@ -262,7 +269,7 @@ function updateSelection() {
 }
 function openSourceDialog() { $('#source-form').reset(); $('#source-dialog').showModal(); $('#source-title').focus(); }
 
-async function refreshRuns() { const result = await api('/api/runs');lastFrontierPoll=Date.now(); state.runs = result.items || []; renderRuns(); if(state.runId&&!state.runs.some(r=>r.id===state.runId))state.runId=null; if (state.runId) await selectRun(state.runId, false); else if(['reactor','observatory'].includes(state.view)) await globalThis.FrontierLive?.enter(state.view); }
+async function refreshRuns() { const result = await api('/api/runs');lastFrontierPoll=Date.now(); state.runs = result.items || []; renderRuns(); if(state.runId&&!state.runs.some(r=>r.id===state.runId))state.runId=null; if (state.runId) await selectRun(state.runId, false); else if(['brief','reactor','observatory'].includes(state.view)) await globalThis.FrontierLive?.enter(state.view); }
 function boundedRunTitle(value) {
   const title=String(value || 'Исследование').replace(/\s+/g,' ').trim();
   return title.length<=180?title:title.slice(0,179).replace(/[\uD800-\uDBFF]$/,'')+'…';
@@ -272,7 +279,7 @@ function renderRuns() {
   if (!state.runs.length) { target.append(empty('◎','Пока нет запусков','Первое исследование начинается с вашего вопроса.')); return; }
   for (const run of state.runs) {
     const plan = run.plan || {};
-    const row = button('',() => selectRun(run.id).catch(showError),'run-row' + (run.id === state.runId ? ' active' : ''));
+    const row = button('',async () => {try {await selectRun(run.id);if(!classicView)switchView('brief');} catch(error) {showError(error);}},'run-row' + (run.id === state.runId ? ' active' : ''));
     const question=plan.question || run.question || 'Исследование';
     const itemTitle=node('div','item-title',boundedRunTitle(question));itemTitle.title=question;
     append(row,statusBadge(run.status),itemTitle,append(node('div','item-meta'),node('span','',providerName(plan.provider || run.provider)),node('span','',date(run.created_at)))); target.append(row);
@@ -281,6 +288,7 @@ function renderRuns() {
 async function selectRun(id, highlight = true) {
   const request=++runSelection;state.runId=id;globalThis.FrontierLive?.loading(id);
   try{const run=await api('/api/runs/'+encodeURIComponent(id));if(request!==runSelection||state.runId!==id)return;
+    if(!classicView){const address=new URL(location.href);address.searchParams.set('run',id);history.replaceState(null,'',address);}
     if(state.view==='runs')renderRunDetail(run);if(highlight)renderRuns();
     await globalThis.FrontierLive?.selected(run);
   }catch(error){if(request===runSelection)globalThis.FrontierLive?.failed(id,error);throw error;}
@@ -1137,7 +1145,9 @@ async function exportBackup() { const backup = await api('/api/export'); downloa
 async function readJsonFile(input, maxMB = 20) { const file = input.files?.[0]; if (!file) return null; if (file.size > maxMB * 1024 * 1024) throw new Error(`Файл больше ${maxMB} МБ. Выберите меньший фрагмент или используйте локальное резервирование папки данных.`); try { return JSON.parse(await file.text()); } catch { throw new Error('Не удалось прочитать JSON. Выберите исходный JSON-экспорт, не HTML и не ZIP.'); } }
 function debounce(callback, ms = 300) { let timeout; return () => {clearTimeout(timeout); timeout = setTimeout(() => callback().catch(showError),ms);}; }
 
-$$('[data-view]').forEach(element => element.addEventListener('click',() => switchView(element.dataset.view)));
+$$('[data-view]').forEach(element => element.addEventListener('click',() => {if(!classicView&&element.dataset.readWorkbench){location.assign('/workbench/#'+element.dataset.readWorkbench);return;}switchView(element.dataset.view);}));
+document.addEventListener('pointerdown',event=>{const tools=document.querySelector('.nav-tools');if(tools?.open&&!tools.contains(event.target))tools.removeAttribute('open');});
+document.addEventListener('keydown',event=>{const tools=document.querySelector('.nav-tools');if(event.key==='Escape'&&tools?.open){tools.removeAttribute('open');tools.querySelector('summary')?.focus();}});
 $$('[data-go]').forEach(element => element.addEventListener('click',() => switchView(element.dataset.go)));
 $$('[data-close]').forEach(element => element.addEventListener('click',() => $('#' + element.dataset.close).close()));
 $('#add-source-button').addEventListener('click',openSourceDialog);
@@ -1159,7 +1169,7 @@ for(const prefix of ['research','setting'])$('#'+prefix+'-mode').addEventListene
 $('#task-form').addEventListener('submit',event=>{event.preventDefault();busy($('button[type=submit]',event.currentTarget),async()=>{if(!state.taskDraft)return;const body={expected_version:state.taskDraft.version,status:$('#task-status').value,body:state.taskDraft.body};if(state.taskDraft.id)body.id=state.taskDraft.id;const saved=taskCurrent(await api('/api/tasks',body));$('#task-dialog').close();await refreshTasks();if(saved.status!=='archived')chooseTask(saved.id);notify('Задача сохранена. Исследование начнётся только после отдельного апрува.');});});
 $('#source-search').addEventListener('input',debounce(refreshSources));
 $('#knowledge-search').addEventListener('input',debounce(refreshKnowledge));
-$('#refresh-button').addEventListener('click',event => busy(event.currentTarget, async () => {globalThis.FrontierLive?.invalidate();await refreshBootstrap(); await refreshSources(); await refreshTasks(); if (['runs','reactor','observatory'].includes(state.view)) await refreshRuns(); if (state.view === 'knowledge') await refreshKnowledge(); notify('Данные обновлены.');}));
+$('#refresh-button').addEventListener('click',event => busy(event.currentTarget, async () => {globalThis.FrontierLive?.invalidate();await refreshBootstrap(); await refreshSources(); await refreshTasks(); if (['runs','brief','reactor','observatory'].includes(state.view)) await refreshRuns(); if (state.view === 'knowledge') await refreshKnowledge(); notify('Данные обновлены.');}));
 $('#source-form').addEventListener('submit',event => {event.preventDefault(); const submit = $('button[type=submit]',event.currentTarget); busy(submit,async () => {const text = $('#source-text').value.trim(), url = $('#source-url').value.trim(); if (!text && !url) throw new Error('Добавьте текст или ссылку.'); const result = await api('/api/sources',{title:$('#source-title').value.trim(),text,url,tags:tags($('#source-tags').value)}); const source = result.source || result; if (source.id) {state.sourceId = source.id; state.selected = new Set([source.id]);} $('#source-dialog').close(); $('#source-search').value = ''; await refreshSources(); await refreshBootstrap(); notify('Материал сохранён. Теперь можно задать вопрос.');});});
 $('#telegram-import').addEventListener('change',async event => {const input = event.target; try {const data = await readJsonFile(input); if (!data) return; const result = await api('/api/import/telegram',{export:data}); $('#source-search').value = ''; await refreshSources(); await refreshBootstrap(); notify(`Импортировано: ${result.imported || 0}. Дубликатов: ${result.duplicates || 0}. Пропущено: ${result.skipped || 0}.`);} catch(error) {showError(error);} finally {input.value = '';}});
 $('#research-form').addEventListener('submit',event => {event.preventDefault(); busy($('#prepare-button'),async () => {if (!state.selected.size) throw new Error('Выберите хотя бы один материал.'); await prepareResearch(researchValues()); await refreshBootstrap();});});
@@ -1247,7 +1257,7 @@ setInterval(async () => {
     const bootstrap = await refreshBootstrap();
     if (oldCount !== bootstrap.counts?.sources) await refreshSources();
     if (state.runs.some(run => activeStatuses.has(run.status)) || oldRuns!==bootstrap.counts?.runs ||
-        (['reactor','observatory'].includes(state.view)&&Date.now()-lastFrontierPoll>=15000)) await refreshRuns();
+        (['brief','reactor','observatory'].includes(state.view)&&Date.now()-lastFrontierPoll>=15000)) await refreshRuns();
     if (state.view==='settings'&&!publicationSaving) await refreshPublication();
   } catch(error) {const banner = $('#connection-error'); banner.textContent = errorMessage(error); banner.hidden = false;}
   finally {state.pollBusy = false;}

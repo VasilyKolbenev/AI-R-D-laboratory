@@ -218,6 +218,7 @@ class OperationsIntegrationTests(unittest.TestCase):
     def test_live_frontier_assets_and_classic_keep_strict_csp_and_correct_types(self):
         self.request('/api/operations')
         for path in ('/', '/classic', '/assets/reactor.js', '/assets/reactor.css',
+                     '/assets/brief.js', '/assets/brief.css',
                      '/assets/observatory.js', '/assets/observatory.css',
                      '/assets/frontier-live.js', '/assets/frontier-shell.css'):
             connection = HTTPConnection('127.0.0.1', self.server.server_port, timeout=15)

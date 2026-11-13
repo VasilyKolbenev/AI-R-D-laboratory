@@ -1,29 +1,30 @@
 /* Live coordinator. Read-only on mount; writes stay behind the existing forms. */
 (()=>{'use strict';
-let bridge,mode='reactor',epoch=0,current=null,queue=null,queueAt=0;
+let bridge,mode='brief',epoch=0,current=null,queue=null,queueAt=0;
 const cache=new Map();
 const elem=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
-const visible=()=>document.body.classList.contains('frontier-live')&&['reactor','observatory'].includes(bridge?.getState().view);
+const visible=()=>document.body.classList.contains('frontier-live')&&['brief','reactor','observatory'].includes(bridge?.getState().view);
 function status(text,error=false){const n=document.getElementById('frontier-state');if(!n)return;n.textContent=text||'';n.hidden=!text;n.classList.toggle('error',error);}
-function payload(){return{...(current||{}),runs:bridge.getState().runs||[],queue,onSelectRun:id=>bridge.selectRun(id).catch(bridge.showError),onAction:(name,id)=>action(name,id).catch(bridge.showError)};}
-function paint(){if(!visible())return;mode=bridge.getState().view;const target=document.getElementById(mode==='reactor'?'reactor-workspace':'observatory-workspace');const component=mode==='reactor'?window.FrontierReactor:window.FrontierObservatory;if(!component?.mount){status('Компонент интерфейса не загрузился. Обновите страницу.',true);return;}component.mount(target,payload());}
+function payload(){return{...(current||{}),runs:bridge.getState().runs||[],queue,knowledge:{items:bridge.getState().knowledge||[]},onSelectRun:id=>bridge.selectRun(id).catch(bridge.showError),onAction:(name,id)=>action(name,id).catch(bridge.showError)};}
+function paint(){if(!visible())return;mode=bridge.getState().view;const target=document.getElementById(mode+'-workspace');const component=mode==='brief'?window.FrontierBrief:mode==='reactor'?window.FrontierReactor:window.FrontierObservatory;if(!component?.mount){status('Компонент интерфейса не загрузился. Обновите страницу.',true);return;}component.mount(target,payload());}
 function key(run){return JSON.stringify([run.id,run.status,run.plan_hash,run.finished_at,run.output,run.agent_pipeline,run.agent_review]);}
 async function selected(run){
  if(!bridge)return;const request=++epoch;
- if(!run){current={run:null,presentation:null,quality:null,context:null};status('');paint();return;}
+ if(!run){current={run:null,presentation:null,quality:null,research:null,context:null};status('');paint();return;}
  const fingerprint=key(run),known=cache.get(fingerprint);
- current=known||{run,presentation:null,quality:null,context:{plan:run.plan||{}},loading:true};
+ current=known||{run,presentation:null,quality:null,research:null,context:{plan:run.plan||{}},loading:true};
  if(!visible())return;
  status(known?'':'Загружаем сохранённые данные исследования…');paint();
  if(known&&Date.now()-queueAt<30000)return;
  const results=await Promise.allSettled([
   known?Promise.resolve(known.presentation):run.status==='completed'&&run.output?bridge.api('/api/runs/'+encodeURIComponent(run.id)+'/presentation'):Promise.resolve(null),
   known?Promise.resolve(known.quality):bridge.api('/api/runs/'+encodeURIComponent(run.id)+'/quality'),
-  Date.now()-queueAt<30000?Promise.resolve(queue):bridge.api('/api/publication')]);
+  Date.now()-queueAt<30000?Promise.resolve(queue):bridge.api('/api/publication'),
+  known?Promise.resolve(known.research):bridge.api('/api/runs/'+encodeURIComponent(run.id)+'/research')]);
  if(request!==epoch||bridge.getState().runId!==run.id)return;
- const errors=[];const values=results.map((r,i)=>{if(r.status==='fulfilled')return r.value;errors.push(['Краткий разбор','Аудит записи','Очередь'][i]+': '+(r.reason?.message||'данные недоступны'));return null;});
+ const errors=[];const values=results.map((r,i)=>{if(r.status==='fulfilled')return r.value;errors.push(['Краткий разбор','Аудит записи','Очередь','Измерения'][i]+': '+(r.reason?.message||'данные недоступны'));return null;});
  if(values[2]){queue=values[2];queueAt=Date.now();}
- current={run,presentation:values[0],quality:values[1],context:{plan:run.plan||{}},loading:false,error:errors.join(' · ')};
+ current={run,presentation:values[0],quality:values[1],research:values[3],context:{plan:run.plan||{}},loading:false,error:errors.join(' · ')};
  if(!errors.length){cache.set(fingerprint,current);while(cache.size>5)cache.delete(cache.keys().next().value);}
  status(current.error,Boolean(current.error));paint();
 }
@@ -41,7 +42,7 @@ function showFrozenPlan(run,memoryOnly=false){
 }
 async function action(name,id){
  const run=current?.run;
- if(name==='reactor'||name==='evidence'){bridge.switchView(name==='evidence'?'observatory':'reactor');return;}
+ if(name==='brief'||name==='reactor'||name==='evidence'){bridge.switchView(name==='evidence'?'observatory':name);return;}
  if(name==='inbox'){bridge.switchView('inbox');return;}
  if(name==='plan'){if(!run){bridge.switchView('inbox');return;}if(run.status==='planned')await bridge.openPlanApproval(run);else showFrozenPlan(run);return;}
  if(name==='memory'){if(run)showFrozenPlan(run,true);else bridge.switchView('settings');return;}
@@ -56,6 +57,6 @@ window.FrontierLive={configure(value){bridge=value;},enter,selected,action,
  failed(id,error){if(bridge?.getState().runId===id){current=null;status(error?.message||'Исследование недоступно.',true);paint();}},
  publication(data){queue=data;queueAt=Date.now();paint();},
  invalidate(){cache.clear();queueAt=0;},
- leave(){++epoch;status('');window.FrontierReactor?.pause?.();window.FrontierObservatory?.pause?.();},
+ leave(){++epoch;status('');window.FrontierBrief?.pause?.();window.FrontierReactor?.pause?.();window.FrontierObservatory?.pause?.();},
  snapshot(){return{mode,runId:current?.run?.id||null,loading:Boolean(current?.loading),error:current?.error||null};}};
 })();

@@ -4,7 +4,7 @@
 или ссылку в план с памятью, разбор с критиком, сравнение условий и сохранённое
 знание. Публикация готового поста требует отдельного подтверждения.
 
-**v0.21.0-alpha.1 · Windows x64 · один владелец · локальное развёртывание**
+**v0.21.0-alpha.2 · Windows x64 · один владелец · локальное развёртывание**
 
 > Local-first applied AI research workbench with approval, personal memory,
 > source evidence, comparisons and publication drafts. This alpha is a personal

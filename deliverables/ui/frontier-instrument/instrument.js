@@ -23,8 +23,7 @@
   let libraryRequest = null, libraryInstance = null, benchmarkInstance = null, corpusInstance = null, benchmarkTimer = null, benchmarkUntil = 0;
   const benchmarkState = {plans:[],selected:null,loaded:false,loading:false};
   let benchmarkRead = 0;
-  if(location.hash==='#benchmarks')state.space='benchmarks';
-  if(location.hash==='#corpus')state.space='corpus';
+  if(['knowledge','compare','validation','benchmarks','corpus'].includes(location.hash.slice(1)))state.space=location.hash.slice(1);
   function el(tag, value, cls) {const n = document.createElement(tag); if (value !== undefined) n.textContent = value; if (cls) n.className = cls; return n;}
   function svg(tag, attrs = {}, value) {const n = document.createElementNS(NS, tag); for (const [k,v] of Object.entries(attrs)) n.setAttribute(k, String(v)); if (value !== undefined) n.textContent = value; return n;}
   function add(parent, ...nodes) {for (const n of nodes.flat()) if (n) parent.append(n); return parent;}
@@ -276,6 +275,7 @@
   }
   async function setSpace(space) {
     if(!['study','knowledge','compare','validation','benchmarks','corpus'].includes(space))return;
+    history.replaceState(null,'',location.pathname+location.search+(space==='study'?'':'#'+space));
     stop();state.space=space;const library=space!=='study';
     const controlled=space==='benchmarks'&&isWorkingLab;
     $('mode-notice').textContent=controlled?'CPU-проверка · один прогон после подтверждения · без моделей и API':'Режим чтения · сохранённые данные · без запусков';
@@ -377,6 +377,7 @@
   $('lens-tabs').addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;const buttons=[...$('lens-tabs').querySelectorAll('button')],index=buttons.indexOf(document.activeElement);if(index<0)return;e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?buttons.length-1:(index+(e.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;buttons[next].focus();buttons[next].click();});
   $('graph-step').addEventListener('click',nextEdge);$('graph-play').addEventListener('click',animate);
   document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();clearTimeout(benchmarkTimer);benchmarkTimer=null;}else benchmarkPoll();});window.addEventListener('pagehide',()=>{stop();clearTimeout(benchmarkTimer);corpusInstance?.destroy?.();});
+  window.addEventListener('hashchange',()=>{const space=location.hash.slice(1)||'study';if(['study','knowledge','compare','validation','benchmarks','corpus'].includes(space))setSpace(space).catch(e=>error(e.message));});
   window.addEventListener('pageshow',event=>{if(event.persisted&&state.space==='corpus'){corpusInstance=null;paintCorpus();}});
   window.FrontierFieldwork={snapshot:()=>({runId:state.run?.id||null,lens:state.lens,space:state.space,loading:state.loading,playing:state.playing,evidenceCount:arr(state.p?.evidence).length,readiness:state.research?.readiness?.stage||null,benchmarkId:benchmarkState.selected?.plan_id||null,benchmarkStatus:benchmarkState.selected?.status||null,corpus:corpusInstance?.snapshot?.()||null,readOnly:state.space!=='benchmarks'||!isWorkingLab})};
   start();
