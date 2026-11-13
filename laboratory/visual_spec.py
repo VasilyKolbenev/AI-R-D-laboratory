@@ -74,15 +74,53 @@ def _choice(kind, engine, code, reason, capability, status='deferred'):
             'reason_code': code, 'reason': reason, 'required_capability': capability}
 
 
+def _infographic_path(graph):
+    """The AntV sequence adapter must not discard branching or edge semantics."""
+    graph = _dict(graph)
+    if graph.get('kind') != 'process':
+        return False
+    nodes, edges = _rows(graph.get('nodes'), 13), _rows(graph.get('edges'), 17)
+    if not 2 <= len(nodes) <= 12 or len(edges) != len(nodes) - 1:
+        return False
+    if any(row.get('lane') != 'technology' for row in nodes):
+        return False
+    ids = {row.get('id') for row in nodes}
+    incoming, outgoing = {key: 0 for key in ids}, {}
+    for edge in edges:
+        if (edge.get('from') not in ids or edge.get('to') not in ids
+                or edge.get('kind') != 'data'
+                or str(edge.get('label', '')).strip().casefold() not in {'', 'следующий шаг', 'next step', 'then'}
+                or edge['from'] in outgoing):
+            return False
+        outgoing[edge['from']] = edge['to']
+        incoming[edge['to']] += 1
+    heads = [key for key, count in incoming.items() if count == 0]
+    if len(heads) != 1 or any(count > 1 for count in incoming.values()):
+        return False
+    seen, key = set(), heads[0]
+    while key is not None and key not in seen:
+        seen.add(key)
+        key = outgoing.get(key)
+    return len(seen) == len(nodes) and key is None
+
+
 def _finish(subject, binding, blocks, primary, choices):
     ordered = sorted(blocks, key=lambda row: READ_ORDER.index(row['slot']))
     for block in ordered:
+        block['renderer_version'] = 'native-v1'
+        if block['kind'] == 'trend_lines':
+            block.update(supported_renderer='antv_g2', renderer_version='5.4.8', fallback_renderer='native_dom_svg')
+        elif block['kind'] == 'process_flow' and block['available'] and _infographic_path(block['data'].get('graph')):
+            block.update(supported_renderer='antv_infographic', renderer_version='0.2.20', fallback_renderer='native_dom_svg')
+        elif block['kind'] == 'process_flow' and block['available']:
+            block['renderer_fallback_reason'] = 'Для ветвления, обратных связей или значимых подписей переходов сохраняется исходный граф.'
         choices.append({key: deepcopy(block[key]) for key in (
             'kind', 'preferred_engine', 'supported_renderer', 'available',
             'selected', 'reason_code', 'reason', 'required_capability')})
         choices[-1]['status'] = 'selected' if block['selected'] else 'rejected'
     return {'version': VERSION,
             'selector': {'method': 'deterministic_rules', 'version': 'visual-selector-v1',
+                         'rendering_version': 'antv-engines-v1',
                          'new_model_calls': 0},
             'subject': subject, 'input_binding': binding,
             'input_digest': _sha({'subject': subject, 'binding': binding}),

@@ -10,3 +10,5 @@
 *.png binary
 # Keep the bundled upstream license byte-for-byte, including its whitespace.
 deliverables/ui/frontier-instrument/fonts/OFL.txt -whitespace
+laboratory/web/vendor/*.js -text -diff linguist-vendored
+laboratory/web/vendor/*.LICENSE.txt -text -whitespace

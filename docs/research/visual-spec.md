@@ -44,8 +44,19 @@ The existing numerator/denominator/paper drilldown remains the evidence path.
 Visual Explainer informs the page composition; Infographic is preferred for
 qualitative structures, G2 for quantities, G6 for relationships, custom components
 for Polo Club-like mechanisms and Manim for optional exported motion.
-These names are preferences, not evidence that a package is installed. Current
-brief and corpus components use their existing native DOM/SVG adapters.
+These names are preferences, not by themselves evidence that a package is installed.
+Since v0.21.0-alpha.4, compatible linear process paths resolve to the locally
+bundled AntV Infographic 0.2.20 adapter, and valid corpus trends resolve to G2 5.4.8.
+`renderer_version` and `fallback_renderer` distinguish those capabilities from
+the native DOM/SVG view. The UI reports the renderer that actually succeeded.
+Branches, feedback, meaningful edge labels and incompatible process types keep
+the original graph. Quantitative brief charts still use their native adapter.
+
+Bundles and original licenses are pinned in `laboratory/web/vendor/manifest.json`.
+The HTML pins SHA-384 browser integrity; upstream tarballs use published SHA-512
+and local files SHA-256. Runtime scripts, fonts, icons and data stay local under
+the existing CSP. `tools/vendor_visual_engines.py` verifies assets offline;
+explicit `--fetch` maintenance replaces them without executing package scripts.
 
 `GET /api/runs/{id}/research` and `GET /api/corpus` expose `visual_spec` alongside
 the original data. No separate mutation endpoint is added. The UI consumes the

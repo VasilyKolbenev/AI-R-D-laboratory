@@ -219,6 +219,8 @@ class OperationsIntegrationTests(unittest.TestCase):
         self.request('/api/operations')
         for path in ('/', '/classic', '/assets/reactor.js', '/assets/reactor.css',
                      '/assets/brief.js', '/assets/brief.css',
+                     '/assets/vendor/antv-infographic.min.js', '/assets/vendor/antv-g2.min.js',
+                     '/assets/infographic-adapter.js',
                      '/assets/observatory.js', '/assets/observatory.css',
                      '/assets/frontier-live.js', '/assets/frontier-shell.css'):
             connection = HTTPConnection('127.0.0.1', self.server.server_port, timeout=15)
