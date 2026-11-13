@@ -23,8 +23,7 @@
   let libraryRequest = null, libraryInstance = null, benchmarkInstance = null, corpusInstance = null, benchmarkTimer = null, benchmarkUntil = 0;
   const benchmarkState = {plans:[],selected:null,loaded:false,loading:false};
   let benchmarkRead = 0;
-  if(location.hash==='#benchmarks')state.space='benchmarks';
-  if(location.hash==='#corpus')state.space='corpus';
+  if(['knowledge','compare','validation','benchmarks','corpus'].includes(location.hash.slice(1)))state.space=location.hash.slice(1);
   function el(tag, value, cls) {const n = document.createElement(tag); if (value !== undefined) n.textContent = value; if (cls) n.className = cls; return n;}
   function svg(tag, attrs = {}, value) {const n = document.createElementNS(NS, tag); for (const [k,v] of Object.entries(attrs)) n.setAttribute(k, String(v)); if (value !== undefined) n.textContent = value; return n;}
   function add(parent, ...nodes) {for (const n of nodes.flat()) if (n) parent.append(n); return parent;}
@@ -276,6 +275,7 @@
   }
   async function setSpace(space) {
     if(!['study','knowledge','compare','validation','benchmarks','corpus'].includes(space))return;
+    history.replaceState(null,'',location.pathname+location.search+(space==='study'?'':'#'+space));
     stop();state.space=space;const library=space!=='study';
     const controlled=space==='benchmarks'&&isWorkingLab;
     $('mode-notice').textContent=controlled?'CPU-проверка · один прогон после подтверждения · без моделей и API':'Режим чтения · сохранённые данные · без запусков';

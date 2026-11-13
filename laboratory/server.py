@@ -359,6 +359,8 @@ class Handler(BaseHTTPRequestHandler):
                     raise LabError("Копия больше 100 МБ. Остановите приложение и скопируйте папку .lab-data целиком для локального резервирования.")
                 return self.send(exported, download="ai-laboratory-backup.json")
             static = {"/assets/research.js": ("research.js", "text/javascript; charset=utf-8"),
+                      "/assets/brief.js": ("brief.js", "text/javascript; charset=utf-8"),
+                      "/assets/brief.css": ("brief.css", "text/css; charset=utf-8"),
                       "/assets/reactor.js": ("reactor.js", "text/javascript; charset=utf-8"),
                       "/assets/reactor.css": ("reactor.css", "text/css; charset=utf-8"),
                       "/assets/observatory.js": ("observatory.js", "text/javascript; charset=utf-8"),
